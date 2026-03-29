@@ -1,0 +1,191 @@
+<Window x:Class="Clipclaw.Views.ClipboardPanel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Clipclaw"
+        Width="360"
+        MaxHeight="560"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- Row height constant so keyboard page-jump can use it -->
+        <sys:Double x:Key="RowHeight" xmlns:sys="clr-namespace:System;assembly=mscorlib">44</sys:Double>
+
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="Foreground"   Value="{DynamicResource MaterialDesignBodyLight}" />
+            <Setter Property="FontSize"     Value="11" />
+            <Setter Property="FontWeight"   Value="SemiBold" />
+            <Setter Property="Margin"       Value="16,12,16,4" />
+            <Setter Property="Opacity"      Value="0.7" />
+        </Style>
+
+        <Style x:Key="ClipRow" TargetType="ListBoxItem">
+            <Setter Property="Height"       Value="{StaticResource RowHeight}" />
+            <Setter Property="Padding"      Value="16,0" />
+            <Setter Property="Background"   Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background"
+                            Value="{DynamicResource MaterialDesignSelection}" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background"
+                            Value="{DynamicResource MaterialDesignDivider}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <!-- Drop shadow + rounded card -->
+    <Border CornerRadius="8"
+            Background="{DynamicResource MaterialDesignPaper}"
+            Margin="8">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.4" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />  <!-- Search -->
+                <RowDefinition Height="*" />     <!-- Scrollable list -->
+            </Grid.RowDefinitions>
+
+            <!-- Search field -->
+            <TextBox x:Name="SearchBox"
+                     Grid.Row="0"
+                     Margin="12,12,12,8"
+                     md:HintAssist.Hint="Search clips…"
+                     md:TextFieldAssist.HasClearButton="True"
+                     Style="{DynamicResource MaterialDesignOutlinedTextBox}"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     PreviewKeyDown="SearchBox_PreviewKeyDown" />
+
+            <!-- Scrollable clip list -->
+            <ScrollViewer Grid.Row="1"
+                          x:Name="ListScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+
+                    <!-- Pinned section -->
+                    <StackPanel Visibility="{Binding PinnedItems.Count,
+                                    Converter={StaticResource CountToVisibilityConverter}}">
+                        <TextBlock Text="📌 PINNED" Style="{StaticResource SectionHeader}" />
+                        <ListBox x:Name="PinnedList"
+                                 ItemsSource="{Binding PinnedItems}"
+                                 SelectedItem="{Binding SelectedItem}"
+                                 ItemContainerStyle="{StaticResource ClipRow}"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 SelectionChanged="AnyList_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayText}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="★"
+                                                   Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <!-- Frequently Used section -->
+                    <StackPanel Visibility="{Binding FrequentItems.Count,
+                                    Converter={StaticResource CountToVisibilityConverter}}">
+                        <TextBlock Text="⭐ FREQUENTLY USED" Style="{StaticResource SectionHeader}" />
+                        <ListBox x:Name="FrequentList"
+                                 ItemsSource="{Binding FrequentItems}"
+                                 SelectedItem="{Binding SelectedItem}"
+                                 ItemContainerStyle="{StaticResource ClipRow}"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 SelectionChanged="AnyList_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayText}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding PasteCount}"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                   FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"
+                                                   Opacity="0.7" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <!-- Recent section -->
+                    <TextBlock Text="🕐 RECENT" Style="{StaticResource SectionHeader}" />
+                    <ListBox x:Name="RecentList"
+                             ItemsSource="{Binding RecentItems}"
+                             SelectedItem="{Binding SelectedItem}"
+                             ItemContainerStyle="{StaticResource ClipRow}"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             SelectionChanged="AnyList_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Margin="16,8"
+                               Text="No clipboard items yet."
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               Opacity="0.5"
+                               FontStyle="Italic">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <!-- Show only when all three lists are empty -->
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding PinnedItems.Count}"   Value="0" />
+                                            <Condition Binding="{Binding FrequentItems.Count}" Value="0" />
+                                            <Condition Binding="{Binding RecentItems.Count}"   Value="0" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>
