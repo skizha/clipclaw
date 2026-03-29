@@ -29,7 +29,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public RelayCommand SaveSettingsCommand  { get; }
     public RelayCommand<ShortcutBinding> RecordShortcutCommand { get; }
 
-    internal SettingsViewModel(IPersistenceService persistence, IHotkeyService hotkeys)
+    public SettingsViewModel(IPersistenceService persistence, IHotkeyService hotkeys)
     {
         _persistence = persistence;
         _hotkeys     = hotkeys;

@@ -46,7 +46,7 @@ public sealed class PanelViewModel : ViewModelBase
 
     public event EventHandler? PasteRequested;
 
-    internal PanelViewModel(
+    public PanelViewModel(
         IPersistenceService   persistence,
         IClipboardService     clipboard,
         IUsageTrackingService usageTracking)
@@ -58,9 +58,9 @@ public sealed class PanelViewModel : ViewModelBase
         PasteSelectedCommand = new RelayCommand(PasteSelected,
             () => SelectedItem is not null);
         CloseCommand  = new RelayCommand(() => PasteRequested?.Invoke(this, EventArgs.Empty));
-        PinCommand    = new RelayCommand<ClipItem>(item => _ = TogglePinAsync(item, pin: true));
-        UnpinCommand  = new RelayCommand<ClipItem>(item => _ = TogglePinAsync(item, pin: false));
-        DeleteCommand = new RelayCommand<ClipItem>(item => _ = DeleteItemAsync(item));
+        PinCommand    = new RelayCommand<ClipItem>(item => { if (item is not null) _ = TogglePinAsync(item, pin: true); });
+        UnpinCommand  = new RelayCommand<ClipItem>(item => { if (item is not null) _ = TogglePinAsync(item, pin: false); });
+        DeleteCommand = new RelayCommand<ClipItem>(item => { if (item is not null) _ = DeleteItemAsync(item); });
 
         _usageTracking.UsageUpdated += (_, _) => _ = LoadItemsAsync();
     }
