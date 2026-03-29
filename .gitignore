@@ -1,0 +1,20 @@
+# Claude Code local settings
+.claude/settings.local.json
+
+# SQLite databases (runtime data, not source)
+*.db
+*.db-shm
+*.db-wal
+
+# .NET build output
+bin/
+obj/
+*.user
+
+# Visual Studio
+.vs/
+*.suo
+
+# OS
+Thumbs.db
+Desktop.ini
