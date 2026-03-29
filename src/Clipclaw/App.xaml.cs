@@ -17,6 +17,7 @@ public partial class App : Application
     private ClipboardPanel?   _panel;
     private SettingsWindow?   _settingsWindow;
     private IntPtr            _previousForegroundWindow;
+    private IntPtr            _messageHostHwnd;   // HWND for native tray menu owner
 
     // ── Startup ──────────────────────────────────────────────────────────────
 
@@ -74,27 +75,38 @@ public partial class App : Application
 
     private void ShowTrayContextMenu()
     {
-        var open = new System.Windows.Controls.MenuItem { Header = "Open Clipclaw" };
-        open.Click += (_, _) => ShowPanel();
-
-        var settings = new System.Windows.Controls.MenuItem { Header = "Settings…" };
-        settings.Click += (_, _) => ShowSettings();
-
-        var exit = new System.Windows.Controls.MenuItem { Header = "Exit" };
-        exit.Click += (_, _) => ExitApplication();
-
-        var menu = new System.Windows.Controls.ContextMenu
-        {
-            Items = { open, settings, new System.Windows.Controls.Separator(), exit }
-        };
-
-        // Position at the cursor — this is the tray icon location, correct on any monitor.
-        // AbsolutePoint + corner of screen → WPF auto-flips the menu above the taskbar.
+        // Use TrackPopupMenu (Win32) instead of WPF ContextMenu.
+        // WPF popups require a visual owner and always attach to an existing window,
+        // causing the menu to appear on the wrong monitor in multi-monitor setups.
+        // TrackPopupMenu takes raw screen coordinates and always appears at the cursor.
         WindowsClipboardInterop.GetCursorPos(out var cursor);
-        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
-        menu.HorizontalOffset = cursor.X;
-        menu.VerticalOffset   = cursor.Y;
-        menu.IsOpen = true;
+
+        var hMenu = WindowsClipboardInterop.CreatePopupMenu();
+        WindowsClipboardInterop.AppendMenu(hMenu, WindowsClipboardInterop.MfString,    new UIntPtr(1), "Open Clipclaw");
+        WindowsClipboardInterop.AppendMenu(hMenu, WindowsClipboardInterop.MfString,    new UIntPtr(2), "Settings…");
+        WindowsClipboardInterop.AppendMenu(hMenu, WindowsClipboardInterop.MfSeparator, UIntPtr.Zero,   null);
+        WindowsClipboardInterop.AppendMenu(hMenu, WindowsClipboardInterop.MfString,    new UIntPtr(3), "Exit");
+
+        // Win32 contract: SetForegroundWindow before TrackPopupMenu so the menu
+        // dismisses properly when the user clicks elsewhere.
+        WindowsClipboardInterop.SetForegroundWindow(_messageHostHwnd);
+
+        int cmd = WindowsClipboardInterop.TrackPopupMenu(
+            hMenu,
+            WindowsClipboardInterop.TpmBottomAlign |
+            WindowsClipboardInterop.TpmReturnCmd   |
+            WindowsClipboardInterop.TpmNoNotify    |
+            WindowsClipboardInterop.TpmRightButton,
+            cursor.X, cursor.Y, 0, _messageHostHwnd, IntPtr.Zero);
+
+        WindowsClipboardInterop.DestroyMenu(hMenu);
+
+        switch (cmd)
+        {
+            case 1: ShowPanel();       break;
+            case 2: ShowSettings();    break;
+            case 3: ExitApplication(); break;
+        }
     }
 
     // ── Hotkeys ───────────────────────────────────────────────────────────────
@@ -129,13 +141,16 @@ public partial class App : Application
     {
         // A hidden window is required for AddClipboardFormatListener.
         // EnsureHandle() creates the HWND without making the window visible.
+        // We keep the HWND as the owner window for the native tray context menu.
         var messageHost = new Window
         {
             Width = 0, Height = 0,
             WindowStyle   = WindowStyle.None,
             ShowInTaskbar = false,
         };
-        new System.Windows.Interop.WindowInteropHelper(messageHost).EnsureHandle();
+        var helper = new System.Windows.Interop.WindowInteropHelper(messageHost);
+        helper.EnsureHandle();
+        _messageHostHwnd = helper.Handle;
 
         var clipboard = Services.GetRequiredService<IClipboardService>();
         clipboard.StartMonitoring(messageHost);

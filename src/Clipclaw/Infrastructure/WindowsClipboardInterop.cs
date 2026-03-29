@@ -47,9 +47,37 @@ internal static class WindowsClipboardInterop
     public static extern IntPtr GetForegroundWindow();
 
     // ── Modifier key flag constants (for RegisterHotKey fsModifiers) ─────────
-    public const uint ModAlt     = 0x0001;
-    public const uint ModControl = 0x0002;
-    public const uint ModShift   = 0x0004;
-    public const uint ModWin     = 0x0008;
+    public const uint ModAlt      = 0x0001;
+    public const uint ModControl  = 0x0002;
+    public const uint ModShift    = 0x0004;
+    public const uint ModWin      = 0x0008;
     public const uint ModNoRepeat = 0x4000;
+
+    // ── Native popup menu (for correct tray-icon menu positioning) ───────────
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr CreatePopupMenu();
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool AppendMenu(IntPtr hMenu, uint uFlags,
+        UIntPtr uIDNewItem, string? lpNewItem);
+
+    [DllImport("user32.dll")]
+    public static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags,
+        int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool DestroyMenu(IntPtr hMenu);
+
+    // AppendMenu flag values
+    public const uint MfString    = 0x00000000;
+    public const uint MfSeparator = 0x00000800;
+
+    // TrackPopupMenu flag values
+    public const uint TpmBottomAlign = 0x0020;
+    public const uint TpmReturnCmd   = 0x0100;
+    public const uint TpmNoNotify    = 0x0080;
+    public const uint TpmRightButton = 0x0002;
 }
