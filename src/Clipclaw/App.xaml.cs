@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using Clipclaw.Infrastructure;
 using Clipclaw.Services;
@@ -59,17 +60,19 @@ public partial class App : Application
     {
         _trayIcon = new TaskbarIcon
         {
-            IconSource    = new System.Windows.Media.Imaging.BitmapImage(
-                                new Uri("pack://application:,,,/Assets/Icons/tray.ico")),
-            ToolTipText   = "Clipclaw",
-            ContextMenu   = BuildTrayContextMenu(),
+            IconSource  = new System.Windows.Media.Imaging.BitmapImage(
+                              new Uri("pack://application:,,,/Assets/Icons/tray.ico")),
+            ToolTipText = "Clipclaw",
         };
 
-        // Double-click tray icon → show panel
         _trayIcon.TrayMouseDoubleClick += (_, _) => ShowPanel();
+
+        // Handle right-click manually so the menu appears near the tray icon
+        // on any monitor, not on Hardcodet's internal helper window.
+        _trayIcon.TrayRightMouseUp += (_, _) => ShowTrayContextMenu();
     }
 
-    private System.Windows.Controls.ContextMenu BuildTrayContextMenu()
+    private void ShowTrayContextMenu()
     {
         var open = new System.Windows.Controls.MenuItem { Header = "Open Clipclaw" };
         open.Click += (_, _) => ShowPanel();
@@ -80,10 +83,18 @@ public partial class App : Application
         var exit = new System.Windows.Controls.MenuItem { Header = "Exit" };
         exit.Click += (_, _) => ExitApplication();
 
-        return new System.Windows.Controls.ContextMenu
+        var menu = new System.Windows.Controls.ContextMenu
         {
             Items = { open, settings, new System.Windows.Controls.Separator(), exit }
         };
+
+        // Position at the cursor — this is the tray icon location, correct on any monitor.
+        // AbsolutePoint + corner of screen → WPF auto-flips the menu above the taskbar.
+        WindowsClipboardInterop.GetCursorPos(out var cursor);
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
+        menu.HorizontalOffset = cursor.X;
+        menu.VerticalOffset   = cursor.Y;
+        menu.IsOpen = true;
     }
 
     // ── Hotkeys ───────────────────────────────────────────────────────────────
@@ -117,15 +128,14 @@ public partial class App : Application
     private void SetupClipboardMonitoring()
     {
         // A hidden window is required for AddClipboardFormatListener.
-        // We use a minimal hidden Window as the message-pump host.
+        // EnsureHandle() creates the HWND without making the window visible.
         var messageHost = new Window
         {
             Width = 0, Height = 0,
-            WindowStyle    = WindowStyle.None,
-            ShowInTaskbar  = false,
-            Visibility     = Visibility.Hidden,
+            WindowStyle   = WindowStyle.None,
+            ShowInTaskbar = false,
         };
-        messageHost.Show();
+        new System.Windows.Interop.WindowInteropHelper(messageHost).EnsureHandle();
 
         var clipboard = Services.GetRequiredService<IClipboardService>();
         clipboard.StartMonitoring(messageHost);
@@ -238,16 +248,37 @@ public partial class App : Application
 
     // ── Unhandled exceptions ──────────────────────────────────────────────────
 
+    private static readonly string LogPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Clipclaw", "clipclaw.log");
+
     private void SetupUnhandledExceptionHandlers()
     {
+        // Catch fatal exceptions on background threads (would otherwise kill the process)
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            WriteLog("FATAL", (Exception)e.ExceptionObject);
+
+        // Catch exceptions on the WPF dispatcher thread
         DispatcherUnhandledException += (_, e) =>
         {
+            WriteLog("ERROR", e.Exception);
             MessageBox.Show(
-                $"An unexpected error occurred:\n\n{e.Exception.Message}",
+                $"An unexpected error occurred:\n\n{e.Exception.Message}\n\nSee {LogPath} for details.",
                 "Clipclaw Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             e.Handled = true;
         };
+    }
+
+    private static void WriteLog(string level, Exception ex)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+            File.AppendAllText(LogPath,
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {level}: {ex}\n\n");
+        }
+        catch { /* logging must never crash the app */ }
     }
 }

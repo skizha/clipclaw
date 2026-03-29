@@ -15,7 +15,7 @@
 
     <Window.Resources>
         <!-- Row height constant so keyboard page-jump can use it -->
-        <sys:Double x:Key="RowHeight" xmlns:sys="clr-namespace:System;assembly=mscorlib">44</sys:Double>
+        <sys:Double x:Key="RowHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">44</sys:Double>
 
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="Foreground"   Value="{DynamicResource MaterialDesignBodyLight}" />

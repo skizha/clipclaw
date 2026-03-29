@@ -28,6 +28,15 @@ internal static class WindowsClipboardInterop
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+    // ── Cursor position ──────────────────────────────────────────────────────
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT { public int X; public int Y; }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetCursorPos(out POINT point);
+
     // ── Focus management ─────────────────────────────────────────────────────
 
     [DllImport("user32.dll", SetLastError = true)]

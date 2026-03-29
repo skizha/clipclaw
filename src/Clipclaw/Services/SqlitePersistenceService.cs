@@ -33,6 +33,8 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         await using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync();
 
+        // Microsoft.Data.Sqlite executes only the first statement per command,
+        // so each DDL statement must be its own call.
         await ExecuteNonQueryAsync(conn, """
             CREATE TABLE IF NOT EXISTS ClipItems (
                 Id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,25 +44,33 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 PasteCount   INTEGER NOT NULL DEFAULT 0,
                 IsPinned     INTEGER NOT NULL DEFAULT 0,
                 DisplayOrder INTEGER NOT NULL DEFAULT 0
-            );
-            CREATE INDEX IF NOT EXISTS idx_clipitems_copiedat   ON ClipItems (CopiedAt DESC);
-            CREATE INDEX IF NOT EXISTS idx_clipitems_pastecount ON ClipItems (PasteCount DESC);
+            )
+            """);
 
+        await ExecuteNonQueryAsync(conn,
+            "CREATE INDEX IF NOT EXISTS idx_clipitems_copiedat ON ClipItems (CopiedAt DESC)");
+
+        await ExecuteNonQueryAsync(conn,
+            "CREATE INDEX IF NOT EXISTS idx_clipitems_pastecount ON ClipItems (PasteCount DESC)");
+
+        await ExecuteNonQueryAsync(conn, """
             CREATE TABLE IF NOT EXISTS AppSettings (
                 Id              INTEGER PRIMARY KEY DEFAULT 1,
                 MaxHistorySize  INTEGER NOT NULL DEFAULT 50,
                 LaunchOnStartup INTEGER NOT NULL DEFAULT 1,
                 PersistHistory  INTEGER NOT NULL DEFAULT 1,
                 PanelShortcut   TEXT    NOT NULL DEFAULT 'Win+Shift+V'
-            );
+            )
+            """);
 
+        await ExecuteNonQueryAsync(conn, """
             CREATE TABLE IF NOT EXISTS ShortcutBindings (
                 Id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 ActionName  TEXT    NOT NULL UNIQUE,
                 Modifiers   TEXT    NOT NULL,
                 Key         TEXT    NOT NULL,
                 IsEnabled   INTEGER NOT NULL DEFAULT 1
-            );
+            )
             """);
 
         await SeedDefaultsAsync(conn);
