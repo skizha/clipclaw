@@ -49,14 +49,41 @@
             <Setter Property="Background"       Value="#252535" />
             <Setter Property="Margin"           Value="16,4,16,0" />
         </Style>
+
+        <QuinticEase x:Key="OpenEase" EasingMode="EaseOut" />
     </Window.Resources>
 
+    <!-- Open animation: fade in + 8px upward slide over 150ms -->
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="RootCard"
+                                     Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1"
+                                     Duration="0:0:0.15"
+                                     EasingFunction="{StaticResource OpenEase}" />
+                    <DoubleAnimation Storyboard.TargetName="SlideTransform"
+                                     Storyboard.TargetProperty="Y"
+                                     From="8" To="0"
+                                     Duration="0:0:0.15"
+                                     EasingFunction="{StaticResource OpenEase}" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
     <!-- Drop shadow + rounded card — solid opaque background, no transparency bleed -->
-    <Border CornerRadius="10"
+    <Border x:Name="RootCard"
+            CornerRadius="10"
             Background="#16161F"
             Margin="10"
+            Opacity="0"
             TextOptions.TextRenderingMode="Auto"
             TextOptions.TextFormattingMode="Display">
+        <Border.RenderTransform>
+            <TranslateTransform x:Name="SlideTransform" Y="8" />
+        </Border.RenderTransform>
         <Border.Effect>
             <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.7" Color="#000000" />
         </Border.Effect>
@@ -241,17 +268,43 @@
                                  ItemsSource="{Binding RecentItems}"
                                  SelectedItem="{Binding SelectedItem}"
                                  ItemContainerStyle="{StaticResource ClipRow}"
+                                 AlternationCount="100"
                                  BorderThickness="0"
                                  Background="Transparent"
                                  SelectionChanged="AnyList_SelectionChanged">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayText}"
-                                               VerticalAlignment="Center"
-                                               FontSize="13"
-                                               TextTrimming="CharacterEllipsis"
-                                               Foreground="{Binding Foreground,
-                                                   RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayText}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="13"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{Binding Foreground,
+                                                       RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+
+                                        <!-- Shortcut badge for items 1–5 (Ctrl+Shift+1 … +5) -->
+                                        <Border Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Margin="8,0,0,0"
+                                                Padding="5,2"
+                                                CornerRadius="3"
+                                                Background="#1E1E2E"
+                                                Visibility="{Binding Path=(ItemsControl.AlternationIndex),
+                                                    RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                    Converter={StaticResource IndexToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex),
+                                                           RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                           Converter={StaticResource IndexToBadgeConverter}}"
+                                                       Foreground="#4A4A6A"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold" />
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>

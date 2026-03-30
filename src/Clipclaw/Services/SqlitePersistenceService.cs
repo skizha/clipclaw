@@ -32,9 +32,14 @@ internal sealed class SqlitePersistenceService : IPersistenceService
     {
         await using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync();
+        await CreateTablesAsync(conn);
+        await SeedDefaultsAsync(conn);
+    }
 
-        // Microsoft.Data.Sqlite executes only the first statement per command,
-        // so each DDL statement must be its own call.
+    // Microsoft.Data.Sqlite executes only the first statement per command,
+    // so each DDL statement gets its own ExecuteNonQueryAsync call.
+    private static async Task CreateTablesAsync(SqliteConnection conn)
+    {
         await ExecuteNonQueryAsync(conn, """
             CREATE TABLE IF NOT EXISTS ClipItems (
                 Id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +53,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
             """);
 
         await ExecuteNonQueryAsync(conn,
-            "CREATE INDEX IF NOT EXISTS idx_clipitems_copiedat ON ClipItems (CopiedAt DESC)");
+            "CREATE INDEX IF NOT EXISTS idx_clipitems_copiedat   ON ClipItems (CopiedAt DESC)");
 
         await ExecuteNonQueryAsync(conn,
             "CREATE INDEX IF NOT EXISTS idx_clipitems_pastecount ON ClipItems (PasteCount DESC)");
@@ -59,7 +64,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 MaxHistorySize  INTEGER NOT NULL DEFAULT 50,
                 LaunchOnStartup INTEGER NOT NULL DEFAULT 1,
                 PersistHistory  INTEGER NOT NULL DEFAULT 1,
-                PanelShortcut   TEXT    NOT NULL DEFAULT 'Win+Shift+V'
+                PanelShortcut   TEXT    NOT NULL DEFAULT 'Ctrl+Shift+V'
             )
             """);
 
@@ -72,8 +77,6 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 IsEnabled   INTEGER NOT NULL DEFAULT 1
             )
             """);
-
-        await SeedDefaultsAsync(conn);
     }
 
     private static async Task SeedDefaultsAsync(SqliteConnection conn)

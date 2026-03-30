@@ -60,72 +60,55 @@ public partial class ClipboardPanel : Window
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        e.Handled = true;
         switch (e.Key)
         {
-            case Key.Down:
-                _viewModel.SelectNext();
-                BringSelectedItemIntoView();
-                e.Handled = true;
-                break;
+            case Key.Down:     Navigate(_viewModel.SelectNext);                          break;
+            case Key.Up:       Navigate(_viewModel.SelectPrevious);                      break;
+            case Key.PageDown: Navigate(() => _viewModel.SelectByPageOffset(+PageJumpSize)); break;
+            case Key.PageUp:   Navigate(() => _viewModel.SelectByPageOffset(-PageJumpSize)); break;
+            case Key.Home:     Navigate(_viewModel.SelectFirst);                         break;
+            case Key.End:      Navigate(_viewModel.SelectLast);                          break;
+            case Key.Return:   _viewModel.PasteSelectedCommand.Execute(null);            break;
+            case Key.Escape:   HandleEscape();                                           break;
+            case Key.Delete:   HandleDelete();                                           break;
+            default:           HandleTypableKey(e);                                      break;
+        }
+    }
 
-            case Key.Up:
-                _viewModel.SelectPrevious();
-                BringSelectedItemIntoView();
-                e.Handled = true;
-                break;
+    private void Navigate(Action move)
+    {
+        move();
+        BringSelectedItemIntoView();
+    }
 
-            case Key.PageDown:
-                _viewModel.SelectByPageOffset(+PageJumpSize);
-                BringSelectedItemIntoView();
-                e.Handled = true;
-                break;
+    private void HandleEscape()
+    {
+        if (!string.IsNullOrEmpty(_viewModel.SearchText))
+            _viewModel.SearchText = string.Empty; // first Escape clears search
+        else
+            Hide();                               // second Escape closes panel
+    }
 
-            case Key.PageUp:
-                _viewModel.SelectByPageOffset(-PageJumpSize);
-                BringSelectedItemIntoView();
-                e.Handled = true;
-                break;
+    private void HandleDelete()
+    {
+        if (_viewModel.SelectedItem is not null)
+            _viewModel.DeleteCommand.Execute(_viewModel.SelectedItem);
+    }
 
-            case Key.Home:
-                _viewModel.SelectFirst();
-                BringSelectedItemIntoView();
-                e.Handled = true;
-                break;
-
-            case Key.End:
-                _viewModel.SelectLast();
-                BringSelectedItemIntoView();
-                e.Handled = true;
-                break;
-
-            case Key.Return:
-                _viewModel.PasteSelectedCommand.Execute(null);
-                e.Handled = true;
-                break;
-
-            case Key.Escape:
-                if (!string.IsNullOrEmpty(_viewModel.SearchText))
-                    _viewModel.SearchText = string.Empty; // First Escape clears search
-                else
-                    Hide();                               // Second Escape closes panel
-                e.Handled = true;
-                break;
-
-            case Key.Delete:
-                if (_viewModel.SelectedItem is not null)
-                    _viewModel.DeleteCommand.Execute(_viewModel.SelectedItem);
-                e.Handled = true;
-                break;
-
-            default:
-                // Any printable character redirects focus to the search box
-                if (IsTypableCharacter(e.Key) && !SearchBox.IsFocused)
-                {
-                    SearchBox.Focus();
-                    SearchBox.CaretIndex = SearchBox.Text.Length;
-                    // Let the key propagate so the character appears in the search box
-                }
-                break;
+    private void HandleTypableKey(KeyEventArgs e)
+    {
+        // Any printable character redirects focus to the search box;
+        // let the key propagate so the character appears in the text.
+        if (IsTypableCharacter(e.Key) && !SearchBox.IsFocused)
+        {
+            e.Handled = false;
+            SearchBox.Focus();
+            SearchBox.CaretIndex = SearchBox.Text.Length;
+        }
+        else
+        {
+            e.Handled = false;
         }
     }
 

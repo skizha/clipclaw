@@ -40,8 +40,9 @@ dotnet run --project src/Clipclaw/Clipclaw.csproj
 The app starts minimised to the system tray. Look for the Clipclaw icon in the
 notification area (bottom-right corner of the taskbar).
 
-- **Show panel**: `Win + Shift + V`
+- **Show panel**: `Ctrl + Shift + V`
 - **Dismiss panel**: `Escape`
+- **Quick paste item 1–5**: `Ctrl + Shift + 1` through `Ctrl + Shift + 5`
 - **Exit**: Right-click tray icon → Exit
 
 ---
@@ -115,7 +116,7 @@ tests/
 
 | Symptom                              | Likely cause                           | Fix                                        |
 |--------------------------------------|----------------------------------------|--------------------------------------------|
-| Panel shortcut doesn't work          | Another app registered `Win+Shift+V`   | Change binding in Settings → Shortcuts     |
+| Panel shortcut doesn't work          | Another app registered `Ctrl+Shift+V`  | Change binding in Settings → Shortcuts     |
 | App won't start (DLL not found)      | .NET 8 runtime not installed           | Install .NET 8 Desktop Runtime             |
 | Database locked error on startup     | Previous instance still running        | Check system tray; kill orphaned process   |
 | Clipboard not capturing              | App lacks window message pump focus    | Check that `AddClipboardFormatListener` is called after `MainWindow` is shown |
