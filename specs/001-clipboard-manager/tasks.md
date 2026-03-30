@@ -137,12 +137,12 @@ Open panel — pinned item is still present in "Pinned" section.
 
 **Purpose**: Production-readiness, Windows citizenship, spec acceptance criteria.
 
-- [ ] T042 [P] Handle Windows session events in `src/Clipclaw/App.xaml.cs` — subscribe to `SystemEvents.SessionSwitch`; call `HotkeyService.UnregisterAll()` on `SessionLock` / `ConsoleDisconnect`; re-register on `SessionUnlock` / `ConsoleConnect`; close panel if open on any session event
-- [ ] T043 [P] Implement launch-on-startup in `src/Clipclaw/Services/SqlitePersistenceService.cs` (or a dedicated `StartupService`) — when `LaunchOnStartup = true`, write app exe path to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Clipclaw`; when false, delete the registry key; call on every `SaveSettingsAsync` where `LaunchOnStartup` changes
-- [ ] T044 [P] Implement history persistence toggle in `src/Clipclaw/App.xaml.cs` — in the `Exit` handler, if `AppSettings.PersistHistory = false` call `IPersistenceService.ClearNonPinnedAsync()` before shutdown
-- [ ] T045 [P] Add `RemoveClipboardFormatListener` and `HotkeyService.UnregisterAll()` calls to the app `Exit` handler in `src/Clipclaw/App.xaml.cs` — ensures clean Windows resource release (Windows-Native Reliability principle)
-- [ ] T046 [P] Readability audit across all source files — verify every function is ≤ 40 lines; every Win32 constant is in `HotkeyConstants.cs`; every `ActionName` string comes from `HotkeyConstants`; no abbreviations in identifiers except `id`, `ui`, `url`; all comments explain *why* not *what*
-- [ ] T047 Run `quickstart.md` validation — follow every step in `specs/001-clipboard-manager/quickstart.md`; exercise all six acceptance scenarios from `spec.md`; confirm SC-001 through SC-008 are met; fix any failures before considering the feature done
+- [X] T042 [P] Handle Windows session events in `src/Clipclaw/App.xaml.cs` — subscribe to `SystemEvents.SessionSwitch`; call `HotkeyService.UnregisterAll()` on `SessionLock` / `ConsoleDisconnect`; re-register on `SessionUnlock` / `ConsoleConnect`; close panel if open on any session event
+- [X] T043 [P] Implement launch-on-startup in `src/Clipclaw/Services/SqlitePersistenceService.cs` (or a dedicated `StartupService`) — when `LaunchOnStartup = true`, write app exe path to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Clipclaw`; when false, delete the registry key; call on every `SaveSettingsAsync` where `LaunchOnStartup` changes
+- [X] T044 [P] Implement history persistence toggle in `src/Clipclaw/App.xaml.cs` — in the `Exit` handler, if `AppSettings.PersistHistory = false` call `IPersistenceService.ClearNonPinnedAsync()` before shutdown
+- [X] T045 [P] Add `RemoveClipboardFormatListener` and `HotkeyService.UnregisterAll()` calls to the app `Exit` handler in `src/Clipclaw/App.xaml.cs` — ensures clean Windows resource release (Windows-Native Reliability principle)
+- [X] T046 [P] Readability audit across all source files — verify every function is ≤ 40 lines; every Win32 constant is in `HotkeyConstants.cs`; every `ActionName` string comes from `HotkeyConstants`; no abbreviations in identifiers except `id`, `ui`, `url`; all comments explain *why* not *what*
+- [X] T047 Run `quickstart.md` validation — follow every step in `specs/001-clipboard-manager/quickstart.md`; exercise all six acceptance scenarios from `spec.md`; confirm SC-001 through SC-008 are met; fix any failures before considering the feature done
 
 ---
 

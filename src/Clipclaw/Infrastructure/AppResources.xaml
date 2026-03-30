@@ -1,0 +1,10 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:inf="clr-namespace:Clipclaw.Infrastructure">
+
+    <inf:CountToVisibilityConverter  x:Key="CountToVisibilityConverter" />
+    <inf:IndexToBadgeConverter       x:Key="IndexToBadgeConverter" />
+    <inf:IndexToVisibilityConverter  x:Key="IndexToVisibilityConverter" />
+    <inf:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+
+</ResourceDictionary>
