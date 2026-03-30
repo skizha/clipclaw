@@ -92,6 +92,10 @@ internal sealed class HotkeyService : IHotkeyService
             };
         }
 
+        // Key enum uses "D0"–"D9" for digit keys; stored bindings use bare "0"–"9".
+        if (keyString.Length == 1 && char.IsDigit(keyString[0]))
+            keyString = "D" + keyString;
+
         return Enum.TryParse(keyString, ignoreCase: true, out key) && key != Key.None;
     }
 }
