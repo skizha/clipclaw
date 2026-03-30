@@ -132,6 +132,12 @@ public partial class App : Application
         {
             var clipboard = Services.GetRequiredService<IClipboardService>();
             clipboard.SetActiveClipboard(index);
+
+            // The hotkey modifier keys (Ctrl+Shift) are still physically held at this
+            // point. Wait 150 ms for them to be released, then inject Ctrl+V into
+            // whatever window the user was typing in (still the foreground window).
+            _ = Task.Delay(150).ContinueWith(
+                _ => Dispatcher.Invoke(WindowsClipboardInterop.SimulatePaste));
         }
     }
 
@@ -226,7 +232,15 @@ public partial class App : Application
             ShowPanel();
     }
 
-    private void OnPanelPasteRequested(object? sender, EventArgs e) => HidePanel();
+    private void OnPanelPasteRequested(object? sender, EventArgs e)
+    {
+        HidePanel(); // restores focus to the previous foreground window
+
+        // Wait 150 ms for the window focus to settle, then inject Ctrl+V so the
+        // selected clip is actually pasted into the target application.
+        _ = Task.Delay(150).ContinueWith(
+            _ => Dispatcher.Invoke(WindowsClipboardInterop.SimulatePaste));
+    }
 
     // ── Settings ──────────────────────────────────────────────────────────────
 
