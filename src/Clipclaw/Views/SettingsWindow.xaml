@@ -4,86 +4,302 @@
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Clipclaw Settings"
         Width="480"
-        Height="420"
+        Height="440"
         WindowStyle="SingleBorderWindow"
         ShowInTaskbar="True"
         ResizeMode="CanResize"
-        Background="{DynamicResource MaterialDesignPaper}">
+        Background="#16161F"
+        Foreground="#E2E2EE">
 
-    <Grid Margin="16">
-        <TabControl Style="{DynamicResource MaterialDesignTabControl}">
+    <Window.Resources>
+        <!-- Label style -->
+        <Style x:Key="SettingsLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#E2E2EE" />
+            <Setter Property="FontSize"   Value="13" />
+        </Style>
+
+        <!-- Muted label -->
+        <Style x:Key="SettingsMuted" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6B6B8A" />
+            <Setter Property="FontSize"   Value="12" />
+        </Style>
+
+        <!-- Section heading inside a tab -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground"       Value="#6B6B8A" />
+            <Setter Property="FontSize"         Value="10" />
+            <Setter Property="FontWeight"       Value="SemiBold" />
+            <Setter Property="Margin"           Value="0,0,0,10" />
+        </Style>
+
+        <!-- Tab item style -->
+        <Style TargetType="TabItem">
+            <Setter Property="Background"  Value="Transparent" />
+            <Setter Property="Foreground"  Value="#6B6B8A" />
+            <Setter Property="FontSize"    Value="13" />
+            <Setter Property="FontWeight"  Value="Medium" />
+            <Setter Property="Padding"     Value="16,10" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Background="Transparent"
+                                BorderThickness="0,0,0,2"
+                                BorderBrush="Transparent"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#E8A030" />
+                                <Setter Property="Foreground" Value="#E2E2EE" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#C0C0DA" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- TabControl style -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background"       Value="Transparent" />
+            <Setter Property="BorderThickness"  Value="0" />
+            <Setter Property="Padding"          Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Tab header strip -->
+                            <Border Grid.Row="0"
+                                    BorderBrush="#252535"
+                                    BorderThickness="0,0,0,1">
+                                <TabPanel IsItemsHost="True"
+                                          Background="Transparent"
+                                          Margin="4,0" />
+                            </Border>
+
+                            <!-- Content area -->
+                            <Border Grid.Row="1"
+                                    Background="#16161F">
+                                <ContentPresenter ContentSource="SelectedContent" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Outlined TextBox style for shortcuts -->
+        <Style x:Key="ShortcutBox" TargetType="TextBox">
+            <Setter Property="Background"      Value="#20202E" />
+            <Setter Property="Foreground"      Value="#E2E2EE" />
+            <Setter Property="CaretBrush"      Value="#E8A030" />
+            <Setter Property="BorderBrush"     Value="#303048" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding"         Value="8,6" />
+            <Setter Property="FontSize"        Value="13" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#E8A030" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Save button -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background"  Value="#E8A030" />
+            <Setter Property="Foreground"  Value="#0F0F18" />
+            <Setter Property="FontWeight"  Value="SemiBold" />
+            <Setter Property="FontSize"    Value="13" />
+            <Setter Property="Padding"     Value="20,8" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor"      Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#F0B040" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#D09020" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle switch style -->
+        <Style x:Key="SettingsToggle" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="#E2E2EE" />
+            <Setter Property="FontSize"   Value="13" />
+            <Setter Property="Margin"     Value="0,0,0,0" />
+            <Setter Property="Cursor"     Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Track -->
+                            <Border x:Name="Track"
+                                    Width="38" Height="20"
+                                    CornerRadius="10"
+                                    Background="#2A2A3A">
+                                <!-- Thumb -->
+                                <Border x:Name="Thumb"
+                                        Width="14" Height="14"
+                                        CornerRadius="7"
+                                        Background="#5A5A7A"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="3,0" />
+                            </Border>
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       VerticalAlignment="Center"
+                                       Margin="10,0,0,0" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="#5A3A10" />
+                                <Setter TargetName="Thumb" Property="Background" Value="#E8A030" />
+                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Slider style -->
+        <Style x:Key="SettingsSlider" TargetType="Slider">
+            <Setter Property="Foreground" Value="#E8A030" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="0">
+        <TabControl>
 
             <!-- ── General tab ── -->
             <TabItem Header="General">
-                <StackPanel Margin="16" VerticalAlignment="Top">
+                <StackPanel Margin="24,20,24,24" VerticalAlignment="Top">
 
-                    <TextBlock Text="History size"
-                               Style="{DynamicResource MaterialDesignSubtitle1TextBlock}"
-                               Margin="0,0,0,4" />
-                    <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="HISTORY" Style="{StaticResource SectionTitle}" />
+
+                    <TextBlock Text="Max history size"
+                               Style="{StaticResource SettingsLabel}"
+                               Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                         <Slider Minimum="10" Maximum="500"
                                 Value="{Binding Settings.MaxHistorySize}"
                                 Width="300"
                                 TickFrequency="10"
                                 IsSnapToTickEnabled="True"
-                                Style="{DynamicResource MaterialDesignSlider}" />
-                        <TextBlock Text="{Binding Settings.MaxHistorySize}"
-                                   VerticalAlignment="Center"
-                                   Margin="12,0,0,0" />
+                                Style="{StaticResource SettingsSlider}" />
+                        <Border Background="#20202E"
+                                CornerRadius="4"
+                                Padding="8,4"
+                                Margin="12,0,0,0">
+                            <TextBlock Text="{Binding Settings.MaxHistorySize}"
+                                       Foreground="#E8A030"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </Border>
                     </StackPanel>
 
-                    <ToggleButton Margin="0,16,0,0"
+                    <Border Height="1" Background="#252535" Margin="0,0,0,20" />
+
+                    <TextBlock Text="BEHAVIOUR" Style="{StaticResource SectionTitle}" />
+
+                    <ToggleButton Margin="0,0,0,14"
                                   IsChecked="{Binding Settings.LaunchOnStartup}"
                                   Content="Launch Clipclaw with Windows"
-                                  Style="{DynamicResource MaterialDesignSwitchToggleButton}" />
+                                  Style="{StaticResource SettingsToggle}" />
 
-                    <ToggleButton Margin="0,12,0,0"
+                    <ToggleButton Margin="0,0,0,0"
                                   IsChecked="{Binding Settings.PersistHistory}"
                                   Content="Keep history across restarts"
-                                  Style="{DynamicResource MaterialDesignSwitchToggleButton}" />
+                                  Style="{StaticResource SettingsToggle}" />
 
-                    <Button Margin="0,24,0,0"
-                            HorizontalAlignment="Left"
+                    <Border Height="1" Background="#252535" Margin="0,24,0,20" />
+
+                    <Button HorizontalAlignment="Left"
                             Command="{Binding SaveSettingsCommand}"
-                            Content="Save"
-                            Style="{DynamicResource MaterialDesignRaisedButton}" />
+                            Content="Save settings"
+                            Style="{StaticResource PrimaryButton}" />
                 </StackPanel>
             </TabItem>
 
             <!-- ── Shortcuts tab ── -->
             <TabItem Header="Shortcuts">
-                <StackPanel Margin="16">
-                    <TextBlock Text="Click a shortcut field and press the new key combination."
-                               Opacity="0.7"
-                               Margin="0,0,0,12" />
+                <StackPanel Margin="24,20,24,24">
+                    <TextBlock Text="KEYBOARD SHORTCUTS" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="Click a field and press the new key combination."
+                               Style="{StaticResource SettingsMuted}"
+                               Margin="0,0,0,16" />
 
                     <ItemsControl ItemsSource="{Binding Bindings}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,4">
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="160" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding ActionName}"
+                                               Style="{StaticResource SettingsLabel}"
                                                VerticalAlignment="Center" />
-                                    <TextBox  Grid.Column="1"
-                                              x:Name="ShortcutField"
-                                              Text="{Binding DisplayText, Mode=OneWay}"
-                                              IsReadOnly="True"
-                                              Cursor="Hand"
-                                              Style="{DynamicResource MaterialDesignOutlinedTextBox}"
-                                              PreviewKeyDown="ShortcutField_PreviewKeyDown"
-                                              GotFocus="ShortcutField_GotFocus"
-                                              Tag="{Binding}" />
+                                    <TextBox Grid.Column="1"
+                                             x:Name="ShortcutField"
+                                             Text="{Binding DisplayText, Mode=OneWay}"
+                                             IsReadOnly="True"
+                                             Cursor="Hand"
+                                             Style="{StaticResource ShortcutBox}"
+                                             PreviewKeyDown="ShortcutField_PreviewKeyDown"
+                                             GotFocus="ShortcutField_GotFocus"
+                                             Tag="{Binding}" />
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
                     <TextBlock Text="{Binding ConflictMessage}"
-                               Foreground="Red"
+                               Foreground="#E05050"
+                               FontSize="12"
                                Margin="0,8,0,0"
                                Visibility="{Binding ConflictMessage.Length,
                                    Converter={StaticResource CountToVisibilityConverter}}" />
@@ -92,18 +308,23 @@
 
             <!-- ── About tab ── -->
             <TabItem Header="About">
-                <StackPanel Margin="24" VerticalAlignment="Top">
+                <StackPanel Margin="24,20,24,24" VerticalAlignment="Top">
                     <TextBlock Text="Clipclaw"
-                               Style="{DynamicResource MaterialDesignHeadline5TextBlock}"
+                               Foreground="#E2E2EE"
+                               FontSize="22"
+                               FontWeight="SemiBold"
                                Margin="0,0,0,4" />
                     <TextBlock Text="Version 1.0.0"
-                               Opacity="0.7"
+                               Style="{StaticResource SettingsMuted}"
                                Margin="0,0,0,16" />
+                    <Border Height="1" Background="#252535" Margin="0,0,0,16" />
                     <TextBlock Text="A keyboard-first Windows clipboard manager."
+                               Style="{StaticResource SettingsLabel}"
                                TextWrapping="Wrap" />
                     <TextBlock Margin="0,16,0,0">
                         <Hyperlink NavigateUri="https://github.com/skizha/clipclaw"
-                                   RequestNavigate="Hyperlink_RequestNavigate">
+                                   RequestNavigate="Hyperlink_RequestNavigate"
+                                   Foreground="#E8A030">
                             github.com/skizha/clipclaw
                         </Hyperlink>
                     </TextBlock>

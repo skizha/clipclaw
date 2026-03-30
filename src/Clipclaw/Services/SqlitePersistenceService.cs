@@ -94,6 +94,20 @@ internal sealed class SqlitePersistenceService : IPersistenceService
             cmd.Parameters.AddWithValue("@key",    binding.Key);
             await cmd.ExecuteNonQueryAsync();
         }
+
+        // Migration: replace old Win+Shift defaults that conflict with Windows taskbar shortcuts.
+        // Only updates rows that still carry the original shipped values — user customisations are preserved.
+        foreach (var (action, newBinding) in HotkeyConstants.DefaultBindings)
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText =
+                "UPDATE ShortcutBindings SET Modifiers = @newMod " +
+                "WHERE ActionName = @action AND Modifiers = 'Win+Shift' AND Key = @key;";
+            cmd.Parameters.AddWithValue("@action", action);
+            cmd.Parameters.AddWithValue("@newMod", newBinding.Modifiers);
+            cmd.Parameters.AddWithValue("@key",    newBinding.Key);
+            await cmd.ExecuteNonQueryAsync();
+        }
     }
 
     // ── Clip items ────────────────────────────────────────────────────────────

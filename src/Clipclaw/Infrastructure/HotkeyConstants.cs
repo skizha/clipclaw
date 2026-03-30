@@ -24,15 +24,17 @@ internal static class HotkeyConstants
 
     // ── Default key bindings ────────────────────────────────────────────────
     // Stored as (Modifiers, Key) pairs for seeding the database.
+    // Using Ctrl+Shift instead of Win+Shift: Win+Shift+1–5 opens new instances
+    // of pinned taskbar apps, and Win+Shift+V is captured by Windows in some builds.
     public static readonly IReadOnlyDictionary<string, (string Modifiers, string Key)> DefaultBindings =
         new Dictionary<string, (string, string)>
         {
-            [ShowPanel]  = ("Win+Shift", "V"),
-            [PasteItem1] = ("Win+Shift", "1"),
-            [PasteItem2] = ("Win+Shift", "2"),
-            [PasteItem3] = ("Win+Shift", "3"),
-            [PasteItem4] = ("Win+Shift", "4"),
-            [PasteItem5] = ("Win+Shift", "5"),
+            [ShowPanel]  = ("Ctrl+Shift", "V"),
+            [PasteItem1] = ("Ctrl+Shift", "1"),
+            [PasteItem2] = ("Ctrl+Shift", "2"),
+            [PasteItem3] = ("Ctrl+Shift", "3"),
+            [PasteItem4] = ("Ctrl+Shift", "4"),
+            [PasteItem5] = ("Ctrl+Shift", "5"),
         };
 
     // ── Windows system shortcuts that must never be assigned ────────────────
@@ -42,6 +44,10 @@ internal static class HotkeyConstants
     {
         "Win+C", "Win+V", "Win+X", "Win+D", "Win+E", "Win+L",
         "Win+R", "Win+S", "Win+I", "Win+A", "Win+Tab",
+        // Win+Shift+1–5 open new instances of pinned taskbar apps
+        "Win+Shift+1", "Win+Shift+2", "Win+Shift+3", "Win+Shift+4", "Win+Shift+5",
+        "Win+Shift+S",   // Snipping Tool
+        "Win+Shift+M",   // Restore minimised windows
         "Ctrl+C", "Ctrl+V", "Ctrl+X", "Ctrl+Z", "Ctrl+Y",
         "Ctrl+A", "Ctrl+S", "Ctrl+P", "Ctrl+Alt+Del",
         "Alt+F4", "Alt+Tab", "Alt+Esc",

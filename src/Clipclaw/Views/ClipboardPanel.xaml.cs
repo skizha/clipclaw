@@ -38,7 +38,7 @@ public partial class ClipboardPanel : Window
         await _viewModel.LoadItemsAsync();
         _viewModel.SearchText = string.Empty;
 
-        PositionNearTray();
+        PositionAtCenter();
         Show();
         Activate();
 
@@ -47,11 +47,13 @@ public partial class ClipboardPanel : Window
         BringSelectedItemIntoView();
     }
 
-    private void PositionNearTray()
+    private void PositionAtCenter()
     {
         var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right  - Width  - 16;
-        Top  = workArea.Bottom - ActualHeight - 16;
+        // Width is fixed; use MaxHeight for vertical centering (panel grows from top).
+        // Sitting slightly above true center feels more natural for a quick-pick UI.
+        Left = workArea.Left + (workArea.Width  - Width)   / 2;
+        Top  = workArea.Top  + (workArea.Height - MaxHeight) / 2 - 30;
     }
 
     // ── Keyboard contract (from contracts/keyboard-contract.md) ───────────────
