@@ -99,7 +99,10 @@ public sealed class PanelViewModel : ViewModelBase
     private static IEnumerable<ClipItem> Filter(IEnumerable<ClipItem> source, string query)
         => string.IsNullOrEmpty(query)
             ? source
-            : source.Where(i => i.Text.Contains(query, StringComparison.OrdinalIgnoreCase));
+            : source.Where(i =>
+                i.Text.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (i.ShortName != null &&
+                 i.ShortName.Contains(query, StringComparison.OrdinalIgnoreCase)));
 
     private static void RefreshCollection(ObservableCollection<ClipItem> collection,
         IEnumerable<ClipItem> newItems)
@@ -138,8 +141,36 @@ public sealed class PanelViewModel : ViewModelBase
 
     private async Task DeleteItemAsync(ClipItem item)
     {
+        // Capture the deleted item's position so we can restore focus to the
+        // nearest remaining item rather than always jumping back to the top.
+        var flat         = GetFlatVisibleList();
+        var deletedIndex = flat.IndexOf(item);
+
         await _persistence.DeleteClipItemAsync(item.Id);
         await LoadItemsAsync();
+
+        if (deletedIndex < 0) return;
+
+        var newFlat = GetFlatVisibleList();
+        if (newFlat.Count > 0)
+            SelectedItem = newFlat[Math.Min(deletedIndex, newFlat.Count - 1)];
+    }
+
+    /// <summary>
+    /// Saves an edited clip item: deletes the original (by Id) then upserts the
+    /// updated version. This cleanly handles text changes without leaving stale rows.
+    /// </summary>
+    public async Task EditItemAsync(ClipItem original, ClipItem updated)
+    {
+        // Delete by Id first so a text change does not create a duplicate row.
+        await _persistence.DeleteClipItemAsync(original.Id);
+        await _persistence.UpsertClipItemAsync(updated);
+        await LoadItemsAsync();
+
+        // Restore selection to the edited item (matched by text after reload)
+        var newFlat = GetFlatVisibleList();
+        var match = newFlat.FirstOrDefault(i => i.Text == updated.Text);
+        if (match is not null) SelectedItem = match;
     }
 
     // ── Keyboard navigation helpers ───────────────────────────────────────────

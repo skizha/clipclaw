@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using Clipclaw.Infrastructure;
+using Clipclaw.Models;
 using Clipclaw.Services;
 using Clipclaw.ViewModels;
 using Clipclaw.Views;
@@ -32,6 +33,11 @@ public partial class App : Application
         await persistence.InitialiseAsync();
 
         var settings = await persistence.GetSettingsAsync();
+
+        // Restore the persisted theme before any window is shown
+        if (settings.Theme != ClipTheme.Dark)
+            ThemeService.Apply(settings.Theme);
+
         StartupService.Apply(settings.LaunchOnStartup);
 
         SetupTrayIcon();

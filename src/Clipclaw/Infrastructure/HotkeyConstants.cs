@@ -9,6 +9,7 @@ internal static class HotkeyConstants
 {
     // ── Action names ────────────────────────────────────────────────────────
     public const string ShowPanel   = "ShowPanel";
+    public const string EditItem    = "EditItem";   // panel-local F2 action (not a global hotkey)
     public const string PasteItem1  = "PasteItem_1";
     public const string PasteItem2  = "PasteItem_2";
     public const string PasteItem3  = "PasteItem_3";
@@ -29,7 +30,7 @@ internal static class HotkeyConstants
     public static readonly IReadOnlyDictionary<string, (string Modifiers, string Key)> DefaultBindings =
         new Dictionary<string, (string, string)>
         {
-            [ShowPanel]  = ("Ctrl+Shift", "V"),
+            [ShowPanel]  = ("Ctrl+Shift", "C"),
             [PasteItem1] = ("Ctrl+Shift", "1"),
             [PasteItem2] = ("Ctrl+Shift", "2"),
             [PasteItem3] = ("Ctrl+Shift", "3"),

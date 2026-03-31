@@ -18,36 +18,52 @@
         <sys:Double x:Key="RowHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">44</sys:Double>
 
         <Style x:Key="SectionHeader" TargetType="TextBlock">
-            <Setter Property="Foreground"       Value="#6B6B8A" />
-            <Setter Property="FontSize"         Value="10" />
-            <Setter Property="FontWeight"       Value="SemiBold" />
-            <Setter Property="Margin"           Value="16,12,16,2" />
+            <Setter Property="Foreground"   Value="{DynamicResource ClipMutedForeground}" />
+            <Setter Property="FontSize"     Value="10" />
+            <Setter Property="FontWeight"   Value="SemiBold" />
+            <Setter Property="Margin"       Value="16,12,16,2" />
         </Style>
 
+        <!--
+            ClipRow — base style for all list items.
+            Alternating background is handled by the DataTrigger on AlternationIndex
+            so the same style works across all three ListBoxes regardless of their
+            AlternationCount value.
+        -->
         <Style x:Key="ClipRow" TargetType="ListBoxItem">
-            <Setter Property="Height"                   Value="{StaticResource RowHeight}" />
-            <Setter Property="Padding"                  Value="16,0" />
-            <Setter Property="Background"               Value="Transparent" />
-            <Setter Property="Foreground"               Value="#E2E2EE" />
-            <Setter Property="BorderThickness"          Value="0" />
+            <Setter Property="Padding"                    Value="16,0" />
+            <Setter Property="Background"                 Value="Transparent" />
+            <Setter Property="Foreground"                 Value="{DynamicResource ClipRowForeground}" />
+            <Setter Property="BorderThickness"            Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="FocusVisualStyle"         Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle"           Value="{x:Null}" />
             <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#2E2E45" />
-                    <Setter Property="Foreground" Value="#F0F0FA" />
-                </Trigger>
+                <!-- Alternating row: odd index gets a subtle shaded background -->
+                <DataTrigger Value="True">
+                    <DataTrigger.Binding>
+                        <Binding Path="(ItemsControl.AlternationIndex)"
+                                 RelativeSource="{RelativeSource Self}"
+                                 Converter="{StaticResource IndexToOddConverter}" />
+                    </DataTrigger.Binding>
+                    <Setter Property="Background" Value="{DynamicResource ClipRowAlternateBackground}" />
+                </DataTrigger>
+                <!-- Hover overrides alternating background -->
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#242436" />
+                    <Setter Property="Background" Value="{DynamicResource ClipRowHoverBackground}" />
+                </Trigger>
+                <!-- Selection overrides hover and alternating background -->
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ClipRowSelectedBackground}" />
+                    <Setter Property="Foreground" Value="{DynamicResource ClipRowSelectedForeground}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <!-- Thin separator between sections -->
         <Style x:Key="SectionDivider" TargetType="Border">
-            <Setter Property="Height"           Value="1" />
-            <Setter Property="Background"       Value="#252535" />
-            <Setter Property="Margin"           Value="16,4,16,0" />
+            <Setter Property="Height"     Value="1" />
+            <Setter Property="Background" Value="{DynamicResource ClipDividerBrush}" />
+            <Setter Property="Margin"     Value="16,4,16,0" />
         </Style>
 
         <QuinticEase x:Key="OpenEase" EasingMode="EaseOut" />
@@ -73,10 +89,10 @@
         </EventTrigger>
     </Window.Triggers>
 
-    <!-- Drop shadow + rounded card — solid opaque background, no transparency bleed -->
+    <!-- Drop shadow + rounded card -->
     <Border x:Name="RootCard"
             CornerRadius="10"
-            Background="#16161F"
+            Background="{DynamicResource ClipPanelBackground}"
             Margin="10"
             Opacity="0"
             TextOptions.TextRenderingMode="Auto"
@@ -89,7 +105,9 @@
         </Border.Effect>
 
         <!-- Subtle inner border for definition -->
-        <Border CornerRadius="10" BorderBrush="#2A2A3A" BorderThickness="1">
+        <Border CornerRadius="10"
+                BorderBrush="{DynamicResource ClipPanelBorderBrush}"
+                BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />  <!-- Search -->
@@ -98,9 +116,9 @@
 
                 <!-- Search field -->
                 <Grid Grid.Row="0" Margin="12,12,12,0">
-                    <Border Background="#20202E"
+                    <Border Background="{DynamicResource ClipSearchBackground}"
                             CornerRadius="6"
-                            BorderBrush="#303048"
+                            BorderBrush="{DynamicResource ClipSearchBorderBrush}"
                             BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -110,14 +128,14 @@
                             <TextBlock Grid.Column="0"
                                        Text="⌕"
                                        FontSize="16"
-                                       Foreground="#4A4A6A"
+                                       Foreground="{DynamicResource ClipMutedForeground}"
                                        VerticalAlignment="Center"
                                        Margin="10,0,4,0" />
                             <TextBox Grid.Column="1"
                                      x:Name="SearchBox"
                                      Background="Transparent"
-                                     Foreground="#E2E2EE"
-                                     CaretBrush="#E2A030"
+                                     Foreground="{DynamicResource ClipRowForeground}"
+                                     CaretBrush="#E8A030"
                                      BorderThickness="0"
                                      Padding="4,10"
                                      FontSize="13"
@@ -144,7 +162,7 @@
                     <!-- Placeholder text -->
                     <TextBlock IsHitTestVisible="False"
                                Text="Search clips…"
-                               Foreground="#3A3A5A"
+                               Foreground="{DynamicResource ClipPlaceholderForeground}"
                                FontSize="13"
                                VerticalAlignment="Center"
                                Margin="38,0,0,0">
@@ -167,7 +185,7 @@
                 <!-- Divider under search -->
                 <Border Grid.Row="0"
                         Height="1"
-                        Background="#222230"
+                        Background="{DynamicResource ClipPanelInnerBorderBrush}"
                         Margin="0,56,0,0"
                         VerticalAlignment="Bottom" />
 
@@ -186,37 +204,110 @@
 
                     <StackPanel>
 
-                        <!-- Pinned section -->
+                        <!-- ── Column headers ── -->
+                        <Grid Margin="16,10,16,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="38" />
+                                <ColumnDefinition Width="88" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="CLIP"
+                                       Foreground="{DynamicResource ClipMutedForeground}"
+                                       FontSize="10" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="1"
+                                       Text="USES"
+                                       Foreground="{DynamicResource ClipMutedForeground}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       TextAlignment="Right" />
+                            <TextBlock Grid.Column="2"
+                                       Text="SHORTCUT"
+                                       Foreground="{DynamicResource ClipMutedForeground}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       TextAlignment="Right" />
+                        </Grid>
+                        <Border Height="1"
+                                Background="{DynamicResource ClipDividerBrush}"
+                                Margin="16,0,16,0" />
+
+                        <!-- ── Pinned section ── -->
                         <StackPanel Visibility="{Binding PinnedItems.Count,
                                         Converter={StaticResource CountToVisibilityConverter}}">
                             <TextBlock Text="PINNED" Style="{StaticResource SectionHeader}" />
                             <ListBox x:Name="PinnedList"
                                      ItemsSource="{Binding PinnedItems}"
-                                     SelectedItem="{Binding SelectedItem}"
+                                     SelectedItem="{Binding SelectedItem, Mode=OneWay}"
                                      ItemContainerStyle="{StaticResource ClipRow}"
+                                     AlternationCount="2"
                                      BorderThickness="0"
                                      Background="Transparent"
-                                     SelectionChanged="AnyList_SelectionChanged">
+                                     SelectionChanged="AnyList_SelectionChanged"
+                                     MouseRightButtonUp="AnyList_MouseRightButtonUp">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid>
+                                        <Grid MinHeight="44">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="38" />
+                                                <ColumnDefinition Width="88" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{Binding DisplayText}"
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Primary label -->
+                                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                                       Text="{Binding DisplayLabel}"
                                                        VerticalAlignment="Center"
+                                                       Margin="0,10,4,0"
                                                        FontSize="13"
                                                        TextTrimming="CharacterEllipsis"
                                                        Foreground="{Binding Foreground,
                                                            RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Text="★"
-                                                       Foreground="#E8A030"
-                                                       FontSize="12"
+
+                                            <!-- Secondary text preview (only when ShortName is set) -->
+                                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                                       Text="{Binding DisplayText}"
+                                                       FontSize="10"
+                                                       Margin="0,1,4,8"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource ClipMutedForeground}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasShortName}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <!-- Uses count -->
+                                            <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                                        Orientation="Horizontal"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding PasteCount,
+                                                               Converter={StaticResource CopyCountDisplayConverter}}"
+                                                           Foreground="{DynamicResource ClipBadgeForeground}"
+                                                           FontSize="11"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Text="★"
+                                                           Foreground="#E8A030"
+                                                           FontSize="11"
+                                                           VerticalAlignment="Center"
+                                                           Margin="4,0,0,0" />
+                                            </StackPanel>
+
+                                            <!-- Shortcut (pinned items have no index shortcut) -->
+                                            <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                                                       Text=""
+                                                       FontSize="11"
                                                        VerticalAlignment="Center"
-                                                       Margin="8,0,0,0" />
+                                                       HorizontalAlignment="Right" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -224,37 +315,76 @@
                             <Border Style="{StaticResource SectionDivider}" />
                         </StackPanel>
 
-                        <!-- Frequently Used section -->
+                        <!-- ── Frequently Used section ── -->
                         <StackPanel Visibility="{Binding FrequentItems.Count,
                                         Converter={StaticResource CountToVisibilityConverter}}">
                             <TextBlock Text="FREQUENT" Style="{StaticResource SectionHeader}" />
                             <ListBox x:Name="FrequentList"
                                      ItemsSource="{Binding FrequentItems}"
-                                     SelectedItem="{Binding SelectedItem}"
+                                     SelectedItem="{Binding SelectedItem, Mode=OneWay}"
                                      ItemContainerStyle="{StaticResource ClipRow}"
+                                     AlternationCount="2"
                                      BorderThickness="0"
                                      Background="Transparent"
-                                     SelectionChanged="AnyList_SelectionChanged">
+                                     SelectionChanged="AnyList_SelectionChanged"
+                                     MouseRightButtonUp="AnyList_MouseRightButtonUp">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid>
+                                        <Grid MinHeight="44">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="38" />
+                                                <ColumnDefinition Width="88" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{Binding DisplayText}"
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Primary label -->
+                                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                                       Text="{Binding DisplayLabel}"
                                                        VerticalAlignment="Center"
+                                                       Margin="0,10,4,0"
                                                        FontSize="13"
                                                        TextTrimming="CharacterEllipsis"
                                                        Foreground="{Binding Foreground,
                                                            RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding PasteCount}"
-                                                       Foreground="#5A5A7A"
+
+                                            <!-- Secondary text preview (when ShortName set) -->
+                                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                                       Text="{Binding DisplayText}"
+                                                       FontSize="10"
+                                                       Margin="0,1,4,8"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource ClipMutedForeground}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasShortName}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <!-- Uses count -->
+                                            <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                                       Text="{Binding PasteCount,
+                                                           Converter={StaticResource CopyCountDisplayConverter}}"
+                                                       Foreground="{DynamicResource ClipBadgeForeground}"
                                                        FontSize="11"
                                                        VerticalAlignment="Center"
-                                                       Margin="8,0,0,0" />
+                                                       HorizontalAlignment="Right" />
+
+                                            <!-- Shortcut (frequent items have no index shortcut) -->
+                                            <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                                                       Text=""
+                                                       FontSize="11"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -262,56 +392,86 @@
                             <Border Style="{StaticResource SectionDivider}" />
                         </StackPanel>
 
-                        <!-- Recent section -->
+                        <!-- ── Recent section ── -->
                         <TextBlock Text="RECENT" Style="{StaticResource SectionHeader}" />
                         <ListBox x:Name="RecentList"
                                  ItemsSource="{Binding RecentItems}"
-                                 SelectedItem="{Binding SelectedItem}"
+                                 SelectedItem="{Binding SelectedItem, Mode=OneWay}"
                                  ItemContainerStyle="{StaticResource ClipRow}"
                                  AlternationCount="100"
                                  BorderThickness="0"
                                  Background="Transparent"
-                                 SelectionChanged="AnyList_SelectionChanged">
+                                 SelectionChanged="AnyList_SelectionChanged"
+                                 MouseRightButtonUp="AnyList_MouseRightButtonUp">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
+                                    <Grid MinHeight="44">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="38" />
+                                            <ColumnDefinition Width="88" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding DisplayText}"
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Primary label -->
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="{Binding DisplayLabel}"
                                                    VerticalAlignment="Center"
+                                                   Margin="0,10,4,0"
                                                    FontSize="13"
                                                    TextTrimming="CharacterEllipsis"
                                                    Foreground="{Binding Foreground,
                                                        RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
 
-                                        <!-- Shortcut badge for items 1–5 (Ctrl+Shift+1 … +5) -->
-                                        <Border Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                Margin="8,0,0,0"
-                                                Padding="5,2"
-                                                CornerRadius="3"
-                                                Background="#1E1E2E"
-                                                Visibility="{Binding Path=(ItemsControl.AlternationIndex),
-                                                    RelativeSource={RelativeSource AncestorType=ListBoxItem},
-                                                    Converter={StaticResource IndexToVisibilityConverter}}">
-                                            <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex),
-                                                           RelativeSource={RelativeSource AncestorType=ListBoxItem},
-                                                           Converter={StaticResource IndexToBadgeConverter}}"
-                                                       Foreground="#4A4A6A"
-                                                       FontSize="10"
-                                                       FontWeight="SemiBold" />
-                                        </Border>
+                                        <!-- Secondary text preview (when ShortName set) -->
+                                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                                   Text="{Binding DisplayText}"
+                                                   FontSize="10"
+                                                   Margin="0,1,4,8"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource ClipMutedForeground}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasShortName}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- Uses count -->
+                                        <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                                   Text="{Binding PasteCount,
+                                                       Converter={StaticResource CopyCountDisplayConverter}}"
+                                                   Foreground="{DynamicResource ClipBadgeForeground}"
+                                                   FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Right" />
+
+                                        <!-- Shortcut column: Ctrl+Shift+1–5 for first five items -->
+                                        <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                                                   Text="{Binding Path=(ItemsControl.AlternationIndex),
+                                                       RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                       Converter={StaticResource IndexToShortcutConverter}}"
+                                                   Foreground="{DynamicResource ClipBadgeForeground}"
+                                                   FontSize="10"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
+                        <!-- Empty state -->
                         <TextBlock Margin="16,12"
                                    Text="No clipboard items yet."
-                                   Foreground="#3A3A5A"
+                                   Foreground="{DynamicResource ClipPlaceholderForeground}"
                                    FontSize="13"
                                    FontStyle="Italic">
                             <TextBlock.Style>

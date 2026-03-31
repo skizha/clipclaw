@@ -64,3 +64,51 @@ internal sealed class IndexToVisibilityConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>
+/// Returns true when the AlternationIndex is odd. Used to apply alternating row
+/// backgrounds via a DataTrigger in the ClipRow style — works with any AlternationCount.
+/// </summary>
+[ValueConversion(typeof(int), typeof(bool))]
+internal sealed class IndexToOddConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is int index && index % 2 == 1;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Maps a 0-based AlternationIndex to the full keyboard shortcut string for the
+/// first five items in the recent list ("Ctrl+Shift+1" – "Ctrl+Shift+5").
+/// Returns empty string for index ≥ 5.
+/// </summary>
+[ValueConversion(typeof(int), typeof(string))]
+internal sealed class IndexToShortcutConverter : IValueConverter
+{
+    private static readonly string[] Shortcuts =
+        ["Ctrl+Shift+1", "Ctrl+Shift+2", "Ctrl+Shift+3", "Ctrl+Shift+4", "Ctrl+Shift+5"];
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is int index && index < Shortcuts.Length ? Shortcuts[index] : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Formats a copy count integer for display in a row badge.
+/// Returns the count as a string, or "999+" when the count would overflow the badge.
+/// </summary>
+[ValueConversion(typeof(int), typeof(string))]
+internal sealed class CopyCountDisplayConverter : IValueConverter
+{
+    private const int Cap = 999;
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is int count ? (count > Cap ? $"{Cap}+" : count.ToString()) : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
