@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using Clipclaw.Infrastructure;
 using Clipclaw.Models;
 using Clipclaw.Services;
+using System.Collections.Generic;
 
 namespace Clipclaw.ViewModels;
 
@@ -18,6 +19,17 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public ObservableCollection<ShortcutBinding> Bindings { get; } = [];
+
+    /// <summary>Available theme choices surfaced to the Settings ComboBox.</summary>
+    public IReadOnlyList<ClipTheme> AvailableThemes { get; } =
+        [ClipTheme.Dark, ClipTheme.Light];
+
+    private ClipTheme _selectedTheme = ClipTheme.Dark;
+    public ClipTheme SelectedTheme
+    {
+        get => _selectedTheme;
+        set => SetProperty(ref _selectedTheme, value);
+    }
 
     private string _conflictMessage = string.Empty;
     public string ConflictMessage
@@ -42,7 +54,8 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public async Task LoadAsync()
     {
-        Settings = await _persistence.GetSettingsAsync();
+        Settings      = await _persistence.GetSettingsAsync();
+        SelectedTheme = Settings.Theme;
 
         var bindings = await _persistence.GetShortcutBindingsAsync();
         Bindings.Clear();
@@ -52,10 +65,14 @@ public sealed class SettingsViewModel : ViewModelBase
 
     private async Task SaveSettingsAsync()
     {
-        // Clamp MaxHistorySize to valid range before saving
         Settings.MaxHistorySize = Math.Clamp(Settings.MaxHistorySize, 10, 500);
+        Settings.Theme          = SelectedTheme;
+
         await _persistence.SaveSettingsAsync(Settings);
         await _persistence.TrimToMaxSizeAsync(Settings.MaxHistorySize);
+
+        // Apply the new theme immediately to all open windows
+        ThemeService.Apply(Settings.Theme);
     }
 
     /// <summary>

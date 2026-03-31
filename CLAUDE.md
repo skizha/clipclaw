@@ -1,8 +1,10 @@
-# Clipclaw Development Guidelines
+﻿# Clipclaw Development Guidelines
 
-Auto-generated from feature plan `001-clipboard-manager`. Last updated: 2026-03-29
+Auto-generated from feature plan `001-clipboard-manager`. Last updated: 2026-03-30
 
 ## Active Technologies
+- C# 12 / .NET 8 LTS + WPF, MaterialDesignThemes.Wpf (Material Design 3), (002-clip-panel-ux)
+- SQLite via `Microsoft.Data.Sqlite`; database at (002-clip-panel-ux)
 
 - **Language**: C# 12 / .NET 8 LTS
 - **UI Framework**: WPF (Windows Presentation Foundation)
@@ -54,6 +56,7 @@ dotnet test tests/Clipclaw.Tests/Clipclaw.Tests.csproj
   MUST be a named constant
 
 ## Recent Changes
+- 002-clip-panel-ux: Added C# 12 / .NET 8 LTS + WPF, MaterialDesignThemes.Wpf (Material Design 3),
 
 - `001-clipboard-manager`: Established full stack (WPF + SQLite + NHotkey +
   Hardcodet tray + MaterialDesign), MVVM architecture, clipboard capture via

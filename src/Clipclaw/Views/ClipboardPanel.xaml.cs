@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Clipclaw.Models;
 using Clipclaw.ViewModels;
 
@@ -61,18 +62,33 @@ public partial class ClipboardPanel : Window
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
+
+        // Modifier-qualified shortcuts checked before the plain-key switch
+        if (e.Key == Key.P && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            TogglePinSelected();
+            return;
+        }
+        if ((e.Key == Key.Apps) ||
+            (e.Key == Key.F10 && Keyboard.Modifiers == ModifierKeys.Shift))
+        {
+            ShowContextMenuForSelected();
+            return;
+        }
+
         switch (e.Key)
         {
-            case Key.Down:     Navigate(_viewModel.SelectNext);                          break;
-            case Key.Up:       Navigate(_viewModel.SelectPrevious);                      break;
+            case Key.Down:     Navigate(_viewModel.SelectNext);                              break;
+            case Key.Up:       Navigate(_viewModel.SelectPrevious);                          break;
             case Key.PageDown: Navigate(() => _viewModel.SelectByPageOffset(+PageJumpSize)); break;
             case Key.PageUp:   Navigate(() => _viewModel.SelectByPageOffset(-PageJumpSize)); break;
-            case Key.Home:     Navigate(_viewModel.SelectFirst);                         break;
-            case Key.End:      Navigate(_viewModel.SelectLast);                          break;
-            case Key.Return:   _viewModel.PasteSelectedCommand.Execute(null);            break;
-            case Key.Escape:   HandleEscape();                                           break;
-            case Key.Delete:   HandleDelete();                                           break;
-            default:           HandleTypableKey(e);                                      break;
+            case Key.Home:     Navigate(_viewModel.SelectFirst);                             break;
+            case Key.End:      Navigate(_viewModel.SelectLast);                              break;
+            case Key.Return:   _viewModel.PasteSelectedCommand.Execute(null);                break;
+            case Key.Escape:   HandleEscape();                                               break;
+            case Key.Delete:   HandleDelete();                                               break;
+            case Key.F2:       HandleEdit();                                                 break;
+            default:           HandleTypableKey(e);                                          break;
         }
     }
 
@@ -92,8 +108,32 @@ public partial class ClipboardPanel : Window
 
     private void HandleDelete()
     {
-        if (_viewModel.SelectedItem is not null)
-            _viewModel.DeleteCommand.Execute(_viewModel.SelectedItem);
+        if (_viewModel.SelectedItem is not { } item) return;
+        ConfirmAndDelete(item);
+    }
+
+    private void ConfirmAndDelete(ClipItem item)
+    {
+        var result = MessageBox.Show(
+            "Delete this item?",
+            "Clipclaw",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+            _viewModel.DeleteCommand.Execute(item);
+    }
+
+    private void HandleEdit()
+    {
+        if (_viewModel.SelectedItem is not { } item) return;
+
+        var dialog = new EditClipDialog(item, this);
+        // ShowDialog blocks until the user closes the dialog
+        dialog.ShowDialog();
+
+        if (dialog.Result is { } updated)
+            _ = _viewModel.EditItemAsync(item, updated);
     }
 
     private void HandleTypableKey(KeyEventArgs e)
@@ -139,20 +179,26 @@ public partial class ClipboardPanel : Window
         }
     }
 
-    // ── Context menu (Application key / Shift+F10) ────────────────────────────
+    // ── Context menu ──────────────────────────────────────────────────────────
 
-    private void OnPreviewKeyDownForContextMenu(object sender, KeyEventArgs e)
+    private void AnyList_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (e.Key == Key.Apps || (e.Key == Key.F10 && Keyboard.Modifiers == ModifierKeys.Shift))
+        // Select whichever row was right-clicked before showing the menu
+        var listBox = (ListBox)sender;
+        var hit = listBox.InputHitTest(e.GetPosition(listBox)) as DependencyObject;
+        while (hit is not null and not ListBoxItem)
+            hit = VisualTreeHelper.GetParent(hit);
+
+        if (hit is ListBoxItem { DataContext: ClipItem clicked })
         {
-            ShowContextMenuForSelected();
-            e.Handled = true;
+            _viewModel.SelectedItem = clicked;
+            if (listBox != PinnedList)   PinnedList.SelectedItem   = null;
+            if (listBox != FrequentList) FrequentList.SelectedItem = null;
+            if (listBox != RecentList)   RecentList.SelectedItem   = null;
         }
-        else if (e.Key == Key.P && Keyboard.Modifiers == ModifierKeys.Control)
-        {
-            TogglePinSelected();
-            e.Handled = true;
-        }
+
+        ShowContextMenuForSelected();
+        e.Handled = true;
     }
 
     private void ShowContextMenuForSelected()
@@ -170,12 +216,8 @@ public partial class ClipboardPanel : Window
             CommandParameter = item,
         };
 
-        var deleteItem = new MenuItem
-        {
-            Header           = "Delete",
-            Command          = _viewModel.DeleteCommand,
-            CommandParameter = item,
-        };
+        var deleteItem = new MenuItem { Header = "Delete" };
+        deleteItem.Click += (_, _) => ConfirmAndDelete(item);
 
         menu.Items.Add(pinItem);
         menu.Items.Add(new Separator());

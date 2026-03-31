@@ -4,29 +4,29 @@
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Clipclaw Settings"
         Width="480"
-        Height="440"
+        Height="520"
         WindowStyle="SingleBorderWindow"
         ShowInTaskbar="True"
         ResizeMode="CanResize"
-        Background="#16161F"
-        Foreground="#E2E2EE">
+        Background="{DynamicResource ClipPanelBackground}"
+        Foreground="{DynamicResource ClipRowForeground}">
 
     <Window.Resources>
         <!-- Label style -->
         <Style x:Key="SettingsLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#E2E2EE" />
+            <Setter Property="Foreground" Value="{DynamicResource ClipRowForeground}" />
             <Setter Property="FontSize"   Value="13" />
         </Style>
 
         <!-- Muted label -->
         <Style x:Key="SettingsMuted" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#6B6B8A" />
+            <Setter Property="Foreground" Value="{DynamicResource ClipMutedForeground}" />
             <Setter Property="FontSize"   Value="12" />
         </Style>
 
         <!-- Section heading inside a tab -->
         <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="Foreground"       Value="#6B6B8A" />
+            <Setter Property="Foreground"       Value="{DynamicResource ClipMutedForeground}" />
             <Setter Property="FontSize"         Value="10" />
             <Setter Property="FontWeight"       Value="SemiBold" />
             <Setter Property="Margin"           Value="0,0,0,10" />
@@ -35,7 +35,7 @@
         <!-- Tab item style -->
         <Style TargetType="TabItem">
             <Setter Property="Background"  Value="Transparent" />
-            <Setter Property="Foreground"  Value="#6B6B8A" />
+            <Setter Property="Foreground"  Value="{DynamicResource ClipMutedForeground}" />
             <Setter Property="FontSize"    Value="13" />
             <Setter Property="FontWeight"  Value="Medium" />
             <Setter Property="Padding"     Value="16,10" />
@@ -53,10 +53,10 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="TabBorder" Property="BorderBrush" Value="#E8A030" />
-                                <Setter Property="Foreground" Value="#E2E2EE" />
+                                <Setter Property="Foreground" Value="{DynamicResource ClipRowForeground}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#C0C0DA" />
+                                <Setter Property="Foreground" Value="{DynamicResource ClipRowForeground}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -80,7 +80,7 @@
 
                             <!-- Tab header strip -->
                             <Border Grid.Row="0"
-                                    BorderBrush="#252535"
+                                    BorderBrush="{DynamicResource ClipDividerBrush}"
                                     BorderThickness="0,0,0,1">
                                 <TabPanel IsItemsHost="True"
                                           Background="Transparent"
@@ -89,7 +89,7 @@
 
                             <!-- Content area -->
                             <Border Grid.Row="1"
-                                    Background="#16161F">
+                                    Background="{DynamicResource ClipPanelBackground}">
                                 <ContentPresenter ContentSource="SelectedContent" />
                             </Border>
                         </Grid>
@@ -100,10 +100,10 @@
 
         <!-- Outlined TextBox style for shortcuts -->
         <Style x:Key="ShortcutBox" TargetType="TextBox">
-            <Setter Property="Background"      Value="#20202E" />
-            <Setter Property="Foreground"      Value="#E2E2EE" />
+            <Setter Property="Background"      Value="{DynamicResource ClipSearchBackground}" />
+            <Setter Property="Foreground"      Value="{DynamicResource ClipRowForeground}" />
             <Setter Property="CaretBrush"      Value="#E8A030" />
-            <Setter Property="BorderBrush"     Value="#303048" />
+            <Setter Property="BorderBrush"     Value="{DynamicResource ClipSearchBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding"         Value="8,6" />
             <Setter Property="FontSize"        Value="13" />
@@ -163,7 +163,7 @@
 
         <!-- Toggle switch style -->
         <Style x:Key="SettingsToggle" TargetType="ToggleButton">
-            <Setter Property="Foreground" Value="#E2E2EE" />
+            <Setter Property="Foreground" Value="{DynamicResource ClipRowForeground}" />
             <Setter Property="FontSize"   Value="13" />
             <Setter Property="Margin"     Value="0,0,0,0" />
             <Setter Property="Cursor"     Value="Hand" />
@@ -175,12 +175,12 @@
                             <Border x:Name="Track"
                                     Width="38" Height="20"
                                     CornerRadius="10"
-                                    Background="#2A2A3A">
+                                    Background="{DynamicResource ClipToggleTrack}">
                                 <!-- Thumb -->
                                 <Border x:Name="Thumb"
                                         Width="14" Height="14"
                                         CornerRadius="7"
-                                        Background="#5A5A7A"
+                                        Background="{DynamicResource ClipToggleThumb}"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
                                         Margin="3,0" />
@@ -228,7 +228,7 @@
                                 TickFrequency="10"
                                 IsSnapToTickEnabled="True"
                                 Style="{StaticResource SettingsSlider}" />
-                        <Border Background="#20202E"
+                        <Border Background="{DynamicResource ClipSearchBackground}"
                                 CornerRadius="4"
                                 Padding="8,4"
                                 Margin="12,0,0,0">
@@ -240,7 +240,7 @@
                         </Border>
                     </StackPanel>
 
-                    <Border Height="1" Background="#252535" Margin="0,0,0,20" />
+                    <Border Height="1" Background="{DynamicResource ClipDividerBrush}" Margin="0,0,0,20" />
 
                     <TextBlock Text="BEHAVIOUR" Style="{StaticResource SectionTitle}" />
 
@@ -254,7 +254,26 @@
                                   Content="Keep history across restarts"
                                   Style="{StaticResource SettingsToggle}" />
 
-                    <Border Height="1" Background="#252535" Margin="0,24,0,20" />
+                    <Border Height="1" Background="{DynamicResource ClipDividerBrush}" Margin="0,24,0,20" />
+
+                    <TextBlock Text="APPEARANCE" Style="{StaticResource SectionTitle}" />
+
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Theme"
+                                   Style="{StaticResource SettingsLabel}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,16,0" />
+                        <ComboBox Grid.Column="1"
+                                  Width="120"
+                                  HorizontalAlignment="Left"
+                                  ItemsSource="{Binding AvailableThemes}"
+                                  SelectedItem="{Binding SelectedTheme}" />
+                    </Grid>
 
                     <Button HorizontalAlignment="Left"
                             Command="{Binding SaveSettingsCommand}"
@@ -310,14 +329,14 @@
             <TabItem Header="About">
                 <StackPanel Margin="24,20,24,24" VerticalAlignment="Top">
                     <TextBlock Text="Clipclaw"
-                               Foreground="#E2E2EE"
+                               Foreground="{DynamicResource ClipRowForeground}"
                                FontSize="22"
                                FontWeight="SemiBold"
                                Margin="0,0,0,4" />
                     <TextBlock Text="Version 1.0.0"
                                Style="{StaticResource SettingsMuted}"
                                Margin="0,0,0,16" />
-                    <Border Height="1" Background="#252535" Margin="0,0,0,16" />
+                    <Border Height="1" Background="{DynamicResource ClipDividerBrush}" Margin="0,0,0,16" />
                     <TextBlock Text="A keyboard-first Windows clipboard manager."
                                Style="{StaticResource SettingsLabel}"
                                TextWrapping="Wrap" />

@@ -33,6 +33,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         await using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync();
         await CreateTablesAsync(conn);
+        await MigrateAsync(conn);
         await SeedDefaultsAsync(conn);
     }
 
@@ -48,7 +49,8 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 LastPastedAt TEXT,
                 PasteCount   INTEGER NOT NULL DEFAULT 0,
                 IsPinned     INTEGER NOT NULL DEFAULT 0,
-                DisplayOrder INTEGER NOT NULL DEFAULT 0
+                DisplayOrder INTEGER NOT NULL DEFAULT 0,
+                ShortName    TEXT    NULL
             )
             """);
 
@@ -64,7 +66,8 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 MaxHistorySize  INTEGER NOT NULL DEFAULT 50,
                 LaunchOnStartup INTEGER NOT NULL DEFAULT 1,
                 PersistHistory  INTEGER NOT NULL DEFAULT 1,
-                PanelShortcut   TEXT    NOT NULL DEFAULT 'Ctrl+Shift+V'
+                PanelShortcut   TEXT    NOT NULL DEFAULT 'Ctrl+Shift+C',
+                Theme           TEXT    NOT NULL DEFAULT 'Dark'
             )
             """);
 
@@ -77,6 +80,28 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 IsEnabled   INTEGER NOT NULL DEFAULT 1
             )
             """);
+    }
+
+    private static async Task MigrateAsync(SqliteConnection conn)
+    {
+        // Additive migrations: ALTER TABLE ADD COLUMN is idempotent via try/catch.
+        // Existing databases gain the new columns; fresh databases already have them
+        // because CreateTablesAsync includes them above.
+        await TryAlterAsync(conn,
+            "ALTER TABLE ClipItems ADD COLUMN ShortName TEXT NULL");
+        await TryAlterAsync(conn,
+            "ALTER TABLE AppSettings ADD COLUMN Theme TEXT NOT NULL DEFAULT 'Dark'");
+    }
+
+    private static async Task TryAlterAsync(SqliteConnection conn, string alterSql)
+    {
+        // SQLite throws when a column already exists; that means the migration
+        // already ran on a previous startup — swallow silently.
+        try
+        {
+            await ExecuteNonQueryAsync(conn, alterSql);
+        }
+        catch (SqliteException) { /* column already exists — migration already applied */ }
     }
 
     private static async Task SeedDefaultsAsync(SqliteConnection conn)
@@ -122,7 +147,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
 
         await using var cmd = conn.CreateCommand();
         cmd.CommandText =
-            "SELECT Id, Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder " +
+            "SELECT Id, Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder, ShortName " +
             "FROM ClipItems ORDER BY IsPinned DESC, CopiedAt DESC;";
 
         var items = new List<ClipItem>();
@@ -140,15 +165,18 @@ internal sealed class SqlitePersistenceService : IPersistenceService
 
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO ClipItems (Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder)
-            VALUES (@text, @copiedAt, @lastPastedAt, @pasteCount, @isPinned, @displayOrder)
+            INSERT INTO ClipItems (Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder, ShortName)
+            VALUES (@text, @copiedAt, @lastPastedAt, @pasteCount, @isPinned, @displayOrder, @shortName)
             ON CONFLICT(Text) DO UPDATE SET
                 CopiedAt     = excluded.CopiedAt,
                 LastPastedAt = excluded.LastPastedAt,
                 PasteCount   = excluded.PasteCount,
                 IsPinned     = excluded.IsPinned,
-                DisplayOrder = excluded.DisplayOrder;
+                DisplayOrder = excluded.DisplayOrder,
+                ShortName    = COALESCE(excluded.ShortName, ShortName);
             """;
+        // COALESCE preserves an existing ShortName when a new capture has ShortName = null
+        // (e.g., ClipboardService re-capturing the same text externally).
         AddClipItemParams(cmd, item);
         await cmd.ExecuteNonQueryAsync();
     }
@@ -208,7 +236,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
         cmd.CommandText =
-            "SELECT Id, MaxHistorySize, LaunchOnStartup, PersistHistory, PanelShortcut " +
+            "SELECT Id, MaxHistorySize, LaunchOnStartup, PersistHistory, PanelShortcut, Theme " +
             "FROM AppSettings WHERE Id = 1;";
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -224,18 +252,20 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO AppSettings (Id, MaxHistorySize, LaunchOnStartup, PersistHistory, PanelShortcut)
-            VALUES (1, @maxSize, @startup, @persist, @shortcut)
+            INSERT INTO AppSettings (Id, MaxHistorySize, LaunchOnStartup, PersistHistory, PanelShortcut, Theme)
+            VALUES (1, @maxSize, @startup, @persist, @shortcut, @theme)
             ON CONFLICT(Id) DO UPDATE SET
                 MaxHistorySize  = excluded.MaxHistorySize,
                 LaunchOnStartup = excluded.LaunchOnStartup,
                 PersistHistory  = excluded.PersistHistory,
-                PanelShortcut   = excluded.PanelShortcut;
+                PanelShortcut   = excluded.PanelShortcut,
+                Theme           = excluded.Theme;
             """;
         cmd.Parameters.AddWithValue("@maxSize",  settings.MaxHistorySize);
         cmd.Parameters.AddWithValue("@startup",  settings.LaunchOnStartup ? 1 : 0);
         cmd.Parameters.AddWithValue("@persist",  settings.PersistHistory  ? 1 : 0);
         cmd.Parameters.AddWithValue("@shortcut", settings.PanelShortcut);
+        cmd.Parameters.AddWithValue("@theme",    settings.Theme.ToString());
         await cmd.ExecuteNonQueryAsync();
     }
 
@@ -294,6 +324,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         cmd.Parameters.AddWithValue("@pasteCount",   item.PasteCount);
         cmd.Parameters.AddWithValue("@isPinned",     item.IsPinned     ? 1 : 0);
         cmd.Parameters.AddWithValue("@displayOrder", item.DisplayOrder);
+        cmd.Parameters.AddWithValue("@shortName",    (object?)item.ShortName ?? DBNull.Value);
     }
 
     private static ClipItem ReadClipItem(SqliteDataReader r) => new()
@@ -305,6 +336,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         PasteCount   = r.GetInt32(4),
         IsPinned     = r.GetInt32(5) == 1,
         DisplayOrder = r.GetInt32(6),
+        ShortName    = r.IsDBNull(7) ? null : r.GetString(7),
     };
 
     private static AppSettings ReadAppSettings(SqliteDataReader r) => new()
@@ -314,6 +346,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         LaunchOnStartup = r.GetInt32(2) == 1,
         PersistHistory  = r.GetInt32(3) == 1,
         PanelShortcut   = r.GetString(4),
+        Theme           = Enum.TryParse<ClipTheme>(r.GetString(5), out var t) ? t : ClipTheme.Dark,
     };
 
     private static ShortcutBinding ReadShortcutBinding(SqliteDataReader r) => new()
