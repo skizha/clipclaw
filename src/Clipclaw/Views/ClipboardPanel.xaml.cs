@@ -167,16 +167,12 @@ public partial class ClipboardPanel : Window
 
     private void AnyList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        // When a list row is clicked, ensure the ViewModel SelectedItem is updated
-        // and the other two lists are cleared so only one item is highlighted.
+        // When a list row is clicked, sync to the ViewModel. The OneWay bindings on
+        // the other two ListBoxes handle deselection automatically: when SelectedItem
+        // is not in a list's ItemsSource, WPF shows no selection there. Never assign
+        // null directly to SelectedItem — that would break the binding on that list.
         if (e.AddedItems.Count > 0 && e.AddedItems[0] is ClipItem clicked)
-        {
             _viewModel.SelectedItem = clicked;
-
-            if (sender != PinnedList)   PinnedList.SelectedItem   = null;
-            if (sender != FrequentList) FrequentList.SelectedItem = null;
-            if (sender != RecentList)   RecentList.SelectedItem   = null;
-        }
     }
 
     // ── Context menu ──────────────────────────────────────────────────────────
@@ -190,12 +186,7 @@ public partial class ClipboardPanel : Window
             hit = VisualTreeHelper.GetParent(hit);
 
         if (hit is ListBoxItem { DataContext: ClipItem clicked })
-        {
             _viewModel.SelectedItem = clicked;
-            if (listBox != PinnedList)   PinnedList.SelectedItem   = null;
-            if (listBox != FrequentList) FrequentList.SelectedItem = null;
-            if (listBox != RecentList)   RecentList.SelectedItem   = null;
-        }
 
         ShowContextMenuForSelected();
         e.Handled = true;
