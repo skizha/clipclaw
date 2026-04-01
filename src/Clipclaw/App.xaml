@@ -10,7 +10,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- BundledTheme registers the primary/secondary color brushes that
                      PaletteHelper.GetTheme() requires for runtime theme switching. -->
-                <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="DeepPurple" SecondaryColor="Lime" />
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="DeepPurple" SecondaryColor="Lime" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
                 <!-- App converters and shared resources -->
                 <ResourceDictionary Source="Infrastructure/AppResources.xaml" />
@@ -18,23 +18,24 @@
 
             <!-- Custom DynamicResource brushes — default dark values.
                  ThemeService.Apply() updates these when the user switches themes. -->
-            <SolidColorBrush x:Key="ClipPanelBackground"        Color="#16161F" />
-            <SolidColorBrush x:Key="ClipPanelBorderBrush"       Color="#2A2A3A" />
-            <SolidColorBrush x:Key="ClipPanelInnerBorderBrush"  Color="#252535" />
-            <SolidColorBrush x:Key="ClipSearchBackground"       Color="#20202E" />
-            <SolidColorBrush x:Key="ClipSearchBorderBrush"      Color="#303048" />
-            <SolidColorBrush x:Key="ClipRowForeground"          Color="#E2E2EE" />
-            <SolidColorBrush x:Key="ClipRowSelectedBackground"  Color="#2E2E45" />
-            <SolidColorBrush x:Key="ClipRowSelectedForeground"  Color="#F0F0FA" />
-            <SolidColorBrush x:Key="ClipRowHoverBackground"     Color="#242436" />
-            <SolidColorBrush x:Key="ClipRowAlternateBackground" Color="#121218" />
-            <SolidColorBrush x:Key="ClipMutedForeground"        Color="#6B6B8A" />
-            <SolidColorBrush x:Key="ClipPlaceholderForeground"  Color="#3A3A5A" />
-            <SolidColorBrush x:Key="ClipDividerBrush"           Color="#252535" />
-            <SolidColorBrush x:Key="ClipBadgeBackground"        Color="#1E1E2E" />
-            <SolidColorBrush x:Key="ClipBadgeForeground"        Color="#4A4A6A" />
-            <SolidColorBrush x:Key="ClipToggleTrack"            Color="#2A2A3A" />
-            <SolidColorBrush x:Key="ClipToggleThumb"            Color="#5A5A7A" />
+            <!-- Default light-theme values — ThemeService.Apply() overwrites these at runtime -->
+            <SolidColorBrush x:Key="ClipPanelBackground"        Color="#F8F8FC" />
+            <SolidColorBrush x:Key="ClipPanelBorderBrush"       Color="#C8C8DC" />
+            <SolidColorBrush x:Key="ClipPanelInnerBorderBrush"  Color="#D8D8EC" />
+            <SolidColorBrush x:Key="ClipSearchBackground"       Color="#EEEEF8" />
+            <SolidColorBrush x:Key="ClipSearchBorderBrush"      Color="#B8B8D0" />
+            <SolidColorBrush x:Key="ClipRowForeground"          Color="#1A1A2A" />
+            <SolidColorBrush x:Key="ClipRowSelectedBackground"  Color="#C0D4F4" />
+            <SolidColorBrush x:Key="ClipRowSelectedForeground"  Color="#0A0A1A" />
+            <SolidColorBrush x:Key="ClipRowHoverBackground"     Color="#DAE8FA" />
+            <SolidColorBrush x:Key="ClipRowAlternateBackground" Color="#F0F0F8" />
+            <SolidColorBrush x:Key="ClipMutedForeground"        Color="#606080" />
+            <SolidColorBrush x:Key="ClipPlaceholderForeground"  Color="#9090B0" />
+            <SolidColorBrush x:Key="ClipDividerBrush"           Color="#D0D0E4" />
+            <SolidColorBrush x:Key="ClipBadgeBackground"        Color="#E4E4F4" />
+            <SolidColorBrush x:Key="ClipBadgeForeground"        Color="#707090" />
+            <SolidColorBrush x:Key="ClipToggleTrack"            Color="#C0C0D4" />
+            <SolidColorBrush x:Key="ClipToggleThumb"            Color="#8080A0" />
         </ResourceDictionary>
     </Application.Resources>
 

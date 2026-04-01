@@ -116,8 +116,10 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Search box -->
+                    <!-- Search box — fixed height matches the Add button (34px) -->
                     <Border Grid.Column="0"
+                            Height="34"
+                            VerticalAlignment="Center"
                             Background="{DynamicResource ClipSearchBackground}"
                             CornerRadius="6"
                             BorderBrush="{DynamicResource ClipSearchBorderBrush}"
@@ -139,7 +141,7 @@
                                      Foreground="{DynamicResource ClipRowForeground}"
                                      CaretBrush="#E8A030"
                                      BorderThickness="0"
-                                     Padding="4,10"
+                                     Padding="4,0"
                                      FontSize="13"
                                      VerticalAlignment="Center"
                                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
@@ -218,13 +220,6 @@
                         </Button.Template>
                     </Button>
                 </Grid>
-
-                <!-- Divider under search -->
-                <Border Grid.Row="0"
-                        Height="1"
-                        Background="{DynamicResource ClipPanelInnerBorderBrush}"
-                        Margin="0,56,0,0"
-                        VerticalAlignment="Bottom" />
 
                 <!-- Scrollable clip list -->
                 <ScrollViewer Grid.Row="1"

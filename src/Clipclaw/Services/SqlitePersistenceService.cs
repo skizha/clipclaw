@@ -68,7 +68,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 LaunchOnStartup INTEGER NOT NULL DEFAULT 1,
                 PersistHistory  INTEGER NOT NULL DEFAULT 1,
                 PanelShortcut   TEXT    NOT NULL DEFAULT 'Ctrl+Shift+C',
-                Theme           TEXT    NOT NULL DEFAULT 'Dark'
+                Theme           TEXT    NOT NULL DEFAULT 'Light'
             )
             """);
 
@@ -94,6 +94,10 @@ internal sealed class SqlitePersistenceService : IPersistenceService
             "ALTER TABLE AppSettings ADD COLUMN Theme TEXT NOT NULL DEFAULT 'Dark'");
         await TryAlterAsync(conn,
             "ALTER TABLE ClipItems ADD COLUMN ShortcutSlot INTEGER NULL");
+        // Migrate the old default 'Dark' → 'Light' now that Light is the new default.
+        // Users who explicitly chose Dark can re-select it in Settings.
+        await ExecuteNonQueryAsync(conn,
+            "UPDATE AppSettings SET Theme = 'Light' WHERE Id = 1 AND Theme = 'Dark';");
     }
 
     private static async Task TryAlterAsync(SqliteConnection conn, string alterSql)

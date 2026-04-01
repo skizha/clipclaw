@@ -34,8 +34,9 @@ public partial class App : Application
 
         var settings = await persistence.GetSettingsAsync();
 
-        // Restore the persisted theme before any window is shown
-        if (settings.Theme != ClipTheme.Dark)
+        // Restore the persisted theme before any window is shown.
+        // Light is the default; only call Apply when the stored theme differs.
+        if (settings.Theme != ClipTheme.Light)
             ThemeService.Apply(settings.Theme);
 
         StartupService.Apply(settings.LaunchOnStartup);
