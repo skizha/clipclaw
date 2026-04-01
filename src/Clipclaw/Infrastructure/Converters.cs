@@ -98,6 +98,20 @@ internal sealed class IndexToShortcutConverter : IValueConverter
 }
 
 /// <summary>
+/// Returns Visible when the bound bool is true, Collapsed otherwise.
+/// Used to show/hide the slot-assigned shortcut TextBlock in the panel.
+/// </summary>
+[ValueConversion(typeof(bool), typeof(Visibility))]
+internal sealed class BoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is true ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
 /// Formats a copy count integer for display in a row badge.
 /// Returns the count as a string, or "999+" when the count would overflow the badge.
 /// </summary>

@@ -41,9 +41,21 @@ internal sealed class ClipboardService : IClipboardService
     public void SetActiveClipboard(int index)
     {
         if (index < 0 || index >= _history.Count) return;
+        WriteToClipboard(_history[index]);
+    }
 
-        var item = _history[index];
+    public void SetActiveClipboardBySlot(int slot)
+    {
+        // Prefer an item with an explicitly assigned slot; fall back to position.
+        var item = _history.FirstOrDefault(i => i.ShortcutSlot == slot)
+                ?? (slot - 1 < _history.Count ? _history[slot - 1] : null);
 
+        if (item is null) return;
+        WriteToClipboard(item);
+    }
+
+    private void WriteToClipboard(ClipItem item)
+    {
         _isWritingToClipboard = true;
         try
         {

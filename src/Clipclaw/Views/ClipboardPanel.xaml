@@ -17,12 +17,7 @@
         <!-- Row height constant so keyboard page-jump can use it -->
         <sys:Double x:Key="RowHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">44</sys:Double>
 
-        <Style x:Key="SectionHeader" TargetType="TextBlock">
-            <Setter Property="Foreground"   Value="{DynamicResource ClipMutedForeground}" />
-            <Setter Property="FontSize"     Value="10" />
-            <Setter Property="FontWeight"   Value="SemiBold" />
-            <Setter Property="Margin"       Value="16,12,16,2" />
-        </Style>
+        <!-- SectionHeader style is replaced by inline accent-bar headers below -->
 
         <!--
             ClipRow — base style for all list items.
@@ -114,9 +109,16 @@
                     <RowDefinition Height="*" />     <!-- Scrollable list -->
                 </Grid.RowDefinitions>
 
-                <!-- Search field -->
+                <!-- Search field + Add button -->
                 <Grid Grid.Row="0" Margin="12,12,12,0">
-                    <Border Background="{DynamicResource ClipSearchBackground}"
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search box -->
+                    <Border Grid.Column="0"
+                            Background="{DynamicResource ClipSearchBackground}"
                             CornerRadius="6"
                             BorderBrush="{DynamicResource ClipSearchBorderBrush}"
                             BorderThickness="1">
@@ -159,8 +161,9 @@
                         </Grid>
                     </Border>
 
-                    <!-- Placeholder text -->
-                    <TextBlock IsHitTestVisible="False"
+                    <!-- Placeholder text (overlays the search box) -->
+                    <TextBlock Grid.Column="0"
+                               IsHitTestVisible="False"
                                Text="Search clips…"
                                Foreground="{DynamicResource ClipPlaceholderForeground}"
                                FontSize="13"
@@ -180,6 +183,40 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
+
+                    <!-- Add button (Ctrl+N) -->
+                    <Button Grid.Column="1"
+                            Width="34" Height="34"
+                            Margin="6,0,0,0"
+                            ToolTip="Add clip  (Ctrl+N)"
+                            Cursor="Hand"
+                            Click="AddButton_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Bg"
+                                        Background="{DynamicResource ClipSearchBackground}"
+                                        BorderBrush="{DynamicResource ClipSearchBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6">
+                                    <TextBlock Text="+"
+                                               FontSize="18"
+                                               FontWeight="Light"
+                                               Foreground="#E8A030"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Margin="0,-1,0,0" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bg" Property="Background" Value="{DynamicResource ClipRowHoverBackground}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="Bg" Property="Opacity" Value="0.7" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </Grid>
 
                 <!-- Divider under search -->
@@ -205,7 +242,7 @@
                     <StackPanel>
 
                         <!-- ── Column headers ── -->
-                        <Grid Margin="16,10,16,4">
+                        <Grid Margin="16,16,16,4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="38" />
@@ -233,7 +270,14 @@
                         <!-- ── Pinned section ── -->
                         <StackPanel Visibility="{Binding PinnedItems.Count,
                                         Converter={StaticResource CountToVisibilityConverter}}">
-                            <TextBlock Text="PINNED" Style="{StaticResource SectionHeader}" />
+                            <StackPanel Orientation="Horizontal" Margin="16,14,16,4">
+                                <Border Width="3" CornerRadius="1.5" Background="#E8A030"
+                                        VerticalAlignment="Stretch" Margin="0,0,8,0" />
+                                <TextBlock Text="PINNED"
+                                           Foreground="#E8A030"
+                                           FontSize="10" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                             <ListBox x:Name="PinnedList"
                                      ItemsSource="{Binding PinnedItems}"
                                      SelectedItem="{Binding SelectedItem, Mode=OneWay}"
@@ -302,10 +346,11 @@
                                                            Margin="4,0,0,0" />
                                             </StackPanel>
 
-                                            <!-- Shortcut (pinned items have no index shortcut) -->
+                                            <!-- Shortcut: shows slot-assigned key if set -->
                                             <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
-                                                       Text=""
-                                                       FontSize="11"
+                                                       Text="{Binding ShortcutLabel}"
+                                                       Foreground="{DynamicResource ClipBadgeForeground}"
+                                                       FontSize="10"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Right" />
                                         </Grid>
@@ -318,7 +363,14 @@
                         <!-- ── Frequently Used section ── -->
                         <StackPanel Visibility="{Binding FrequentItems.Count,
                                         Converter={StaticResource CountToVisibilityConverter}}">
-                            <TextBlock Text="FREQUENT" Style="{StaticResource SectionHeader}" />
+                            <StackPanel Orientation="Horizontal" Margin="16,14,16,4">
+                                <Border Width="3" CornerRadius="1.5" Background="#7B8BE8"
+                                        VerticalAlignment="Stretch" Margin="0,0,8,0" />
+                                <TextBlock Text="FREQUENT"
+                                           Foreground="#7B8BE8"
+                                           FontSize="10" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                             <ListBox x:Name="FrequentList"
                                      ItemsSource="{Binding FrequentItems}"
                                      SelectedItem="{Binding SelectedItem, Mode=OneWay}"
@@ -379,10 +431,11 @@
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Right" />
 
-                                            <!-- Shortcut (frequent items have no index shortcut) -->
+                                            <!-- Shortcut: shows slot-assigned key if set -->
                                             <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
-                                                       Text=""
-                                                       FontSize="11"
+                                                       Text="{Binding ShortcutLabel}"
+                                                       Foreground="{DynamicResource ClipBadgeForeground}"
+                                                       FontSize="10"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Right" />
                                         </Grid>
@@ -393,7 +446,14 @@
                         </StackPanel>
 
                         <!-- ── Recent section ── -->
-                        <TextBlock Text="RECENT" Style="{StaticResource SectionHeader}" />
+                        <StackPanel Orientation="Horizontal" Margin="16,14,16,4">
+                            <Border Width="3" CornerRadius="1.5" Background="#5ABFA8"
+                                    VerticalAlignment="Stretch" Margin="0,0,8,0" />
+                            <TextBlock Text="RECENT"
+                                       Foreground="#5ABFA8"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                         <ListBox x:Name="RecentList"
                                  ItemsSource="{Binding RecentItems}"
                                  SelectedItem="{Binding SelectedItem, Mode=OneWay}"
@@ -454,15 +514,37 @@
                                                    VerticalAlignment="Center"
                                                    HorizontalAlignment="Right" />
 
-                                        <!-- Shortcut column: Ctrl+Shift+1–5 for first five items -->
-                                        <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
-                                                   Text="{Binding Path=(ItemsControl.AlternationIndex),
-                                                       RelativeSource={RelativeSource AncestorType=ListBoxItem},
-                                                       Converter={StaticResource IndexToShortcutConverter}}"
-                                                   Foreground="{DynamicResource ClipBadgeForeground}"
-                                                   FontSize="10"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right" />
+                                        <!-- Shortcut column: explicit slot takes priority;
+                                             position-based (Ctrl+Shift+1–5) shows as fallback -->
+                                        <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
+                                            <!-- Slot-assigned shortcut (shown when slot is set) -->
+                                            <TextBlock Text="{Binding ShortcutLabel}"
+                                                       Visibility="{Binding HasShortcutLabel,
+                                                           Converter={StaticResource BoolToVisibilityConverter}}"
+                                                       Foreground="{DynamicResource ClipBadgeForeground}"
+                                                       FontSize="10"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" />
+                                            <!-- Position-based fallback (collapsed when slot is assigned) -->
+                                            <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex),
+                                                           RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                           Converter={StaticResource IndexToShortcutConverter}}"
+                                                       Foreground="{DynamicResource ClipBadgeForeground}"
+                                                       FontSize="10"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasShortcutLabel}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

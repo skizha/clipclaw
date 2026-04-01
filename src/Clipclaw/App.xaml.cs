@@ -137,7 +137,7 @@ public partial class App : Application
         if (index >= 0)
         {
             var clipboard = Services.GetRequiredService<IClipboardService>();
-            clipboard.SetActiveClipboard(index);
+            clipboard.SetActiveClipboardBySlot(index + 1); // slot is 1-based
 
             // The hotkey modifier keys (Ctrl+Shift) are still physically held at this
             // point. Wait 150 ms for them to be released, then inject Ctrl+V into

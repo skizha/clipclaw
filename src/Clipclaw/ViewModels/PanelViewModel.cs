@@ -162,6 +162,9 @@ public sealed class PanelViewModel : ViewModelBase
     /// </summary>
     public async Task EditItemAsync(ClipItem original, ClipItem updated)
     {
+        if (updated.ShortcutSlot.HasValue)
+            await _persistence.ClearShortcutSlotAsync(updated.ShortcutSlot.Value, original.Id);
+
         // Delete by Id first so a text change does not create a duplicate row.
         await _persistence.DeleteClipItemAsync(original.Id);
         await _persistence.UpsertClipItemAsync(updated);
@@ -170,6 +173,22 @@ public sealed class PanelViewModel : ViewModelBase
         // Restore selection to the edited item (matched by text after reload)
         var newFlat = GetFlatVisibleList();
         var match = newFlat.FirstOrDefault(i => i.Text == updated.Text);
+        if (match is not null) SelectedItem = match;
+    }
+
+    /// <summary>
+    /// Persists a brand-new clip item entered manually by the user.
+    /// </summary>
+    public async Task AddItemAsync(ClipItem item)
+    {
+        if (item.ShortcutSlot.HasValue)
+            await _persistence.ClearShortcutSlotAsync(item.ShortcutSlot.Value, excludeId: 0);
+
+        await _persistence.UpsertClipItemAsync(item);
+        await LoadItemsAsync();
+
+        var newFlat = GetFlatVisibleList();
+        var match = newFlat.FirstOrDefault(i => i.Text == item.Text);
         if (match is not null) SelectedItem = match;
     }
 

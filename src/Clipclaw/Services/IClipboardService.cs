@@ -16,4 +16,11 @@ public interface IClipboardService
     /// Does nothing if the index is out of range.
     /// </summary>
     void SetActiveClipboard(int index);
+
+    /// <summary>
+    /// Writes the item assigned to <paramref name="slot"/> (1–5) to the clipboard.
+    /// If no item has that slot explicitly assigned, falls back to the Nth item in
+    /// history (0-based: slot 1 → index 0). Does nothing if nothing matches.
+    /// </summary>
+    void SetActiveClipboardBySlot(int slot);
 }

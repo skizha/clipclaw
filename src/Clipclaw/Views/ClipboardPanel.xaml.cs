@@ -69,6 +69,11 @@ public partial class ClipboardPanel : Window
             TogglePinSelected();
             return;
         }
+        if (e.Key == Key.N && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            HandleAdd();
+            return;
+        }
         if ((e.Key == Key.Apps) ||
             (e.Key == Key.F10 && Keyboard.Modifiers == ModifierKeys.Shift))
         {
@@ -129,11 +134,20 @@ public partial class ClipboardPanel : Window
         if (_viewModel.SelectedItem is not { } item) return;
 
         var dialog = new EditClipDialog(item, this);
-        // ShowDialog blocks until the user closes the dialog
         dialog.ShowDialog();
 
         if (dialog.Result is { } updated)
             _ = _viewModel.EditItemAsync(item, updated);
+    }
+
+    private void HandleAdd()
+    {
+        var blank = new ClipItem { CopiedAt = DateTime.UtcNow };
+        var dialog = new EditClipDialog(blank, this);
+        dialog.ShowDialog();
+
+        if (dialog.Result is { } added)
+            _ = _viewModel.AddItemAsync(added);
     }
 
     private void HandleTypableKey(KeyEventArgs e)
@@ -151,6 +165,8 @@ public partial class ClipboardPanel : Window
             e.Handled = false;
         }
     }
+
+    private void AddButton_Click(object sender, RoutedEventArgs e) => HandleAdd();
 
     private void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {

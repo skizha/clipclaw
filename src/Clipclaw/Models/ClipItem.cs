@@ -41,4 +41,21 @@ public sealed class ClipItem
 
     /// <summary>True when this item qualifies for the "Frequently Used" section.</summary>
     public bool IsFrequent => PasteCount >= 5;
+
+    /// <summary>
+    /// User-assigned global shortcut slot (1–5 → Ctrl+Shift+1–5).
+    /// Null means no slot is assigned; the system falls back to position-based shortcuts
+    /// for Recent items only.
+    /// </summary>
+    public int? ShortcutSlot { get; set; }
+
+    /// <summary>
+    /// Human-readable shortcut label for the panel's shortcut column.
+    /// Returns "Ctrl+Shift+N" when a slot is assigned, or empty string otherwise.
+    /// </summary>
+    public string ShortcutLabel =>
+        ShortcutSlot.HasValue ? $"Ctrl+Shift+{ShortcutSlot}" : string.Empty;
+
+    /// <summary>True when a shortcut slot has been explicitly assigned to this item.</summary>
+    public bool HasShortcutLabel => ShortcutSlot.HasValue;
 }
