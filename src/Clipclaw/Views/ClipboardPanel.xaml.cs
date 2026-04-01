@@ -133,7 +133,10 @@ public partial class ClipboardPanel : Window
     {
         if (_viewModel.SelectedItem is not { } item) return;
 
-        var dialog = new EditClipDialog(item, this);
+        // Build occupied-slot map excluding the item being edited so its own
+        // current slot doesn't appear as "taken by someone else".
+        var occupied = OccupiedSlots(excludeItem: item);
+        var dialog = new EditClipDialog(item, this, occupied);
         dialog.ShowDialog();
 
         if (dialog.Result is { } updated)
@@ -142,13 +145,19 @@ public partial class ClipboardPanel : Window
 
     private void HandleAdd()
     {
-        var blank = new ClipItem { CopiedAt = DateTime.UtcNow };
-        var dialog = new EditClipDialog(blank, this);
+        var occupied = OccupiedSlots(excludeItem: null);
+        var blank    = new ClipItem { CopiedAt = DateTime.UtcNow };
+        var dialog   = new EditClipDialog(blank, this, occupied);
         dialog.ShowDialog();
 
         if (dialog.Result is { } added)
             _ = _viewModel.AddItemAsync(added);
     }
+
+    private IReadOnlyDictionary<int, string> OccupiedSlots(ClipItem? excludeItem)
+        => _viewModel.GetFlatVisibleList()
+            .Where(i => i.ShortcutSlot.HasValue && !ReferenceEquals(i, excludeItem))
+            .ToDictionary(i => i.ShortcutSlot!.Value, i => i.DisplayLabel);
 
     private void HandleTypableKey(KeyEventArgs e)
     {

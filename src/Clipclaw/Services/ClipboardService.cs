@@ -69,6 +69,8 @@ internal sealed class ClipboardService : IClipboardService
         _ = _usageTracking.RecordPasteAsync(item);
     }
 
+    public Task RefreshHistoryAsync() => LoadHistoryAsync();
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private async Task LoadHistoryAsync()

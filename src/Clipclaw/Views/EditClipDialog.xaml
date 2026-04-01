@@ -122,16 +122,11 @@
         <!-- Shortcut slot picker -->
         <TextBlock Text="SHORTCUT KEY (optional)"
                    Style="{StaticResource FieldLabel}" />
+        <!-- Items are populated in code-behind (BuildSlotItems) so occupied slots
+             can be annotated with the name of the item that currently holds them. -->
         <ComboBox x:Name="SlotComboBox"
                   Style="{StaticResource SlotCombo}"
-                  Margin="0,0,0,4">
-            <ComboBoxItem Content="None"          Tag="{x:Null}" />
-            <ComboBoxItem Content="Ctrl+Shift+1"  Tag="1" />
-            <ComboBoxItem Content="Ctrl+Shift+2"  Tag="2" />
-            <ComboBoxItem Content="Ctrl+Shift+3"  Tag="3" />
-            <ComboBoxItem Content="Ctrl+Shift+4"  Tag="4" />
-            <ComboBoxItem Content="Ctrl+Shift+5"  Tag="5" />
-        </ComboBox>
+                  Margin="0,0,0,4" />
         <TextBlock Text="Assigns a global Ctrl+Shift+N hotkey directly to this item"
                    Foreground="{DynamicResource ClipPlaceholderForeground}"
                    FontSize="11"

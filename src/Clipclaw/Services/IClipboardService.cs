@@ -23,4 +23,10 @@ public interface IClipboardService
     /// history (0-based: slot 1 → index 0). Does nothing if nothing matches.
     /// </summary>
     void SetActiveClipboardBySlot(int slot);
+
+    /// <summary>
+    /// Reloads the in-memory history snapshot from the database.
+    /// Must be called after any manual add/edit so hotkey lookups see the latest data.
+    /// </summary>
+    Task RefreshHistoryAsync();
 }

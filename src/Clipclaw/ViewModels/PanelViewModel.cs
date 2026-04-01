@@ -168,6 +168,7 @@ public sealed class PanelViewModel : ViewModelBase
         // Delete by Id first so a text change does not create a duplicate row.
         await _persistence.DeleteClipItemAsync(original.Id);
         await _persistence.UpsertClipItemAsync(updated);
+        await _clipboard.RefreshHistoryAsync(); // keep hotkey engine in sync
         await LoadItemsAsync();
 
         // Restore selection to the edited item (matched by text after reload)
@@ -185,6 +186,7 @@ public sealed class PanelViewModel : ViewModelBase
             await _persistence.ClearShortcutSlotAsync(item.ShortcutSlot.Value, excludeId: 0);
 
         await _persistence.UpsertClipItemAsync(item);
+        await _clipboard.RefreshHistoryAsync(); // keep hotkey engine in sync
         await LoadItemsAsync();
 
         var newFlat = GetFlatVisibleList();

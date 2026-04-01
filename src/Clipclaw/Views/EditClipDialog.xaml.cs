@@ -15,35 +15,32 @@ public partial class EditClipDialog : Window
     /// </summary>
     public ClipItem? Result { get; private set; }
 
-    public EditClipDialog(ClipItem item, Window owner)
+    /// <param name="item">Item to edit (Id == 0 for new items).</param>
+    /// <param name="owner">Parent window for centering.</param>
+    /// <param name="occupiedSlots">
+    /// Maps slot number (1–5) → the label of the item that currently holds it,
+    /// excluding <paramref name="item"/> itself. Used to warn the user when they
+    /// pick a slot that is already in use by another item.
+    /// </param>
+    public EditClipDialog(ClipItem item, Window owner,
+        IReadOnlyDictionary<int, string> occupiedSlots)
     {
         InitializeComponent();
         Owner     = owner;
         _original = item;
 
-        // Adjust title based on whether this is a new or existing item
         Title = item.Id == 0 ? "Add Clip" : "Edit Clip";
 
-        // Pre-fill fields
         ShortNameBox.Text = item.ShortName ?? string.Empty;
         TextBox.Text      = item.Text;
 
-        // Pre-select the slot combo
+        BuildSlotItems(occupiedSlots);
         SelectSlot(item.ShortcutSlot);
 
-        // Focus the text field for new items (user needs to type content first);
-        // focus the short-name field for existing items (name is the quick tweak).
         Loaded += (_, _) =>
         {
-            if (item.Id == 0)
-            {
-                TextBox.Focus();
-            }
-            else
-            {
-                ShortNameBox.Focus();
-                ShortNameBox.SelectAll();
-            }
+            if (item.Id == 0) TextBox.Focus();
+            else { ShortNameBox.Focus(); ShortNameBox.SelectAll(); }
         };
 
         PreviewKeyDown += OnDialogPreviewKeyDown;
@@ -127,15 +124,35 @@ public partial class EditClipDialog : Window
 
     // ── Slot helpers ──────────────────────────────────────────────────────────
 
+    private void BuildSlotItems(IReadOnlyDictionary<int, string> occupiedSlots)
+    {
+        // Rebuild combo items so occupied slots show who holds them.
+        // Tag stays null for None and an int for slots 1–5.
+        SlotComboBox.Items.Clear();
+        SlotComboBox.Items.Add(new ComboBoxItem { Content = "None", Tag = null });
+
+        for (var n = 1; n <= 5; n++)
+        {
+            string label = occupiedSlots.TryGetValue(n, out var holder)
+                ? $"Ctrl+Shift+{n}  —  taken by \"{TruncateLabel(holder)}\""
+                : $"Ctrl+Shift+{n}";
+
+            SlotComboBox.Items.Add(new ComboBoxItem { Content = label, Tag = n });
+        }
+    }
+
     private void SelectSlot(int? slot)
     {
-        // ComboBoxItem index: 0=None, 1=slot1, 2=slot2, 3=slot3, 4=slot4, 5=slot5
-        SlotComboBox.SelectedIndex = slot.HasValue ? slot.Value : 0;
+        // Index 0 = None, index N = slot N
+        SlotComboBox.SelectedIndex = slot ?? 0;
     }
 
     private int? SelectedSlot()
     {
-        if (SlotComboBox.SelectedItem is not ComboBoxItem { Tag: string tag }) return null;
-        return int.TryParse(tag, out var slot) ? slot : null;
+        if (SlotComboBox.SelectedItem is ComboBoxItem { Tag: int slot }) return slot;
+        return null;
     }
+
+    private static string TruncateLabel(string label)
+        => label.Length <= 20 ? label : string.Concat(label.AsSpan(0, 20), "…");
 }
