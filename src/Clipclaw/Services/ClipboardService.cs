@@ -46,9 +46,23 @@ internal sealed class ClipboardService : IClipboardService
 
     public void SetActiveClipboardBySlot(int slot)
     {
-        // Prefer an item with an explicitly assigned slot; fall back to position.
-        var item = _history.FirstOrDefault(i => i.ShortcutSlot == slot)
-                ?? (slot - 1 < _history.Count ? _history[slot - 1] : null);
+        // Explicit slot assignment always takes priority.
+        var item = _history.FirstOrDefault(i => i.ShortcutSlot == slot);
+
+        if (item is null)
+        {
+            // Position-based fallback: must mirror the Recent section in the panel,
+            // which shows only non-pinned, non-frequent items ordered by CopiedAt DESC.
+            // _history is already sorted IsPinned DESC, CopiedAt DESC, so filtering
+            // preserves the correct CopiedAt order within the non-pinned group.
+            var recentItems = _history
+                .Where(i => !i.IsPinned && !i.IsFrequent)
+                .ToList();
+
+            var idx = slot - 1;
+            if (idx >= 0 && idx < recentItems.Count)
+                item = recentItems[idx];
+        }
 
         if (item is null) return;
         WriteToClipboard(item);
