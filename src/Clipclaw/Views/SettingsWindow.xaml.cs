@@ -56,8 +56,10 @@ public partial class SettingsWindow : Window
             field.Text = binding.DisplayText; // Show newly saved binding
         }
 
-        // Move focus away so the field stops capturing keys
-        MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+        // Stay on the Shortcuts tab — MoveFocus(Next) walks into the tab headers and
+        // WPF selects the first tab (General). Clear focus so the field stops capturing keys.
+        SettingsTabControl.SelectedIndex = 1;
+        Keyboard.ClearFocus();
     }
 
     private static string BuildModifierString(ModifierKeys modifiers)

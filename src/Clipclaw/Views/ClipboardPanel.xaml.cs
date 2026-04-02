@@ -12,6 +12,12 @@ public partial class ClipboardPanel : Window
     // Visible rows used for Page Up/Down jump size calculation
     private const int PageJumpSize = 5;
 
+    /// <summary>
+    /// When non-zero, the panel lost activation to a modal dialog or message box we opened;
+    /// do not treat that as "click outside" (which would hide the panel).
+    /// </summary>
+    private int _suppressDeactivateHideDepth;
+
     private readonly PanelViewModel _viewModel;
 
     public event EventHandler? PasteRequested;
@@ -119,11 +125,21 @@ public partial class ClipboardPanel : Window
 
     private void ConfirmAndDelete(ClipItem item)
     {
-        var result = MessageBox.Show(
-            "Delete this item?",
-            "Clipclaw",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+        _suppressDeactivateHideDepth++;
+        MessageBoxResult result;
+        try
+        {
+            result = MessageBox.Show(
+                this,
+                "Delete this item?",
+                "Clipclaw",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+        }
+        finally
+        {
+            _suppressDeactivateHideDepth--;
+        }
 
         if (result == MessageBoxResult.Yes)
             _viewModel.DeleteCommand.Execute(item);
@@ -137,7 +153,15 @@ public partial class ClipboardPanel : Window
         // current slot doesn't appear as "taken by someone else".
         var occupied = OccupiedSlots(excludeItem: item);
         var dialog = new EditClipDialog(item, this, occupied);
-        dialog.ShowDialog();
+        _suppressDeactivateHideDepth++;
+        try
+        {
+            dialog.ShowDialog();
+        }
+        finally
+        {
+            _suppressDeactivateHideDepth--;
+        }
 
         if (dialog.Result is { } updated)
             _ = _viewModel.EditItemAsync(item, updated);
@@ -148,7 +172,15 @@ public partial class ClipboardPanel : Window
         var occupied = OccupiedSlots(excludeItem: null);
         var blank    = new ClipItem { CopiedAt = DateTime.UtcNow };
         var dialog   = new EditClipDialog(blank, this, occupied);
-        dialog.ShowDialog();
+        _suppressDeactivateHideDepth++;
+        try
+        {
+            dialog.ShowDialog();
+        }
+        finally
+        {
+            _suppressDeactivateHideDepth--;
+        }
 
         if (dialog.Result is { } added)
             _ = _viewModel.AddItemAsync(added);
@@ -272,6 +304,13 @@ public partial class ClipboardPanel : Window
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
+        // Opening a modal Edit/MessageBox moves activation away; don't treat that as leaving the panel.
+        if (_suppressDeactivateHideDepth > 0)
+            return;
+        // Owned modal children (e.g. EditClipDialog) — extra guard while the dialog is visible.
+        if (OwnedWindows.Count > 0)
+            return;
+
         // Auto-close when the user clicks outside the panel
         Hide();
     }

@@ -509,37 +509,13 @@
                                                    VerticalAlignment="Center"
                                                    HorizontalAlignment="Right" />
 
-                                        <!-- Shortcut column: explicit slot takes priority;
-                                             position-based (Ctrl+Shift+1–5) shows as fallback -->
-                                        <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
-                                            <!-- Slot-assigned shortcut (shown when slot is set) -->
-                                            <TextBlock Text="{Binding ShortcutLabel}"
-                                                       Visibility="{Binding HasShortcutLabel,
-                                                           Converter={StaticResource BoolToVisibilityConverter}}"
-                                                       Foreground="{DynamicResource ClipBadgeForeground}"
-                                                       FontSize="10"
-                                                       VerticalAlignment="Center"
-                                                       HorizontalAlignment="Right" />
-                                            <!-- Position-based fallback (collapsed when slot is assigned) -->
-                                            <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex),
-                                                           RelativeSource={RelativeSource AncestorType=ListBoxItem},
-                                                           Converter={StaticResource IndexToShortcutConverter}}"
-                                                       Foreground="{DynamicResource ClipBadgeForeground}"
-                                                       FontSize="10"
-                                                       VerticalAlignment="Center"
-                                                       HorizontalAlignment="Right">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding HasShortcutLabel}" Value="True">
-                                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Grid>
+                                        <!-- Shortcut: manual slot only (same display as Pinned / Frequent) -->
+                                        <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                                                   Text="{Binding ShortcutLabel}"
+                                                   Foreground="{DynamicResource ClipBadgeForeground}"
+                                                   FontSize="10"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Right" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

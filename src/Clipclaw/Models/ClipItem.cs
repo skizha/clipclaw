@@ -43,9 +43,8 @@ public sealed class ClipItem
     public bool IsFrequent => PasteCount >= 5;
 
     /// <summary>
-    /// User-assigned global shortcut slot (1–5 → Ctrl+Shift+1–5).
-    /// Null means no slot is assigned; the system falls back to position-based shortcuts
-    /// for Recent items only.
+    /// User-assigned global shortcut slot (1–5 → Ctrl+Shift+1–5), set in Edit.
+    /// Null means no shortcut is bound to this item.
     /// </summary>
     public int? ShortcutSlot { get; set; }
 
