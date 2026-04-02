@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -36,6 +37,33 @@ public partial class ClipboardPanel : Window
 
         Deactivated += OnDeactivated;
         PreviewKeyDown += OnPreviewKeyDown;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Closed += (_, _) => _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PanelViewModel.SelectedItem))
+            SyncListBoxSelections();
+    }
+
+    /// <summary>
+    /// Each section uses its own ListBox. OneWay SelectedItem binding does not clear the
+    /// previous list's selection when the VM points at an item in another section — sync explicitly.
+    /// </summary>
+    private void SyncListBoxSelections()
+    {
+        var sel = _viewModel.SelectedItem;
+        SyncOneList(PinnedList,   sel);
+        SyncOneList(FrequentList, sel);
+        SyncOneList(RecentList,  sel);
+    }
+
+    private static void SyncOneList(ListBox list, ClipItem? sel)
+    {
+        var next = sel is not null && list.Items.Contains(sel) ? sel : null;
+        if (!Equals(list.SelectedItem, next))
+            list.SelectedItem = next;
     }
 
     // ── Open / close ──────────────────────────────────────────────────────────
@@ -224,10 +252,9 @@ public partial class ClipboardPanel : Window
 
     private void AnyList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        // When a list row is clicked, sync to the ViewModel. The OneWay bindings on
-        // the other two ListBoxes handle deselection automatically: when SelectedItem
-        // is not in a list's ItemsSource, WPF shows no selection there. Never assign
-        // null directly to SelectedItem — that would break the binding on that list.
+        // When a list row is clicked, sync to the ViewModel. SyncListBoxSelections()
+        // clears the other two lists when SelectedItem changes (WPF does not reliably
+        // clear stale selection when the VM points at an item in another section).
         if (e.AddedItems.Count > 0 && e.AddedItems[0] is ClipItem clicked)
             _viewModel.SelectedItem = clicked;
     }
@@ -249,6 +276,12 @@ public partial class ClipboardPanel : Window
         e.Handled = true;
     }
 
+    private void AnyList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        HandleEdit();
+        e.Handled = true;
+    }
+
     private void ShowContextMenuForSelected()
     {
         if (_viewModel.SelectedItem is not { } item) return;
@@ -264,10 +297,14 @@ public partial class ClipboardPanel : Window
             CommandParameter = item,
         };
 
+        var editItem = new MenuItem { Header = "Edit" };
+        editItem.Click += (_, _) => HandleEdit();
+
         var deleteItem = new MenuItem { Header = "Delete" };
         deleteItem.Click += (_, _) => ConfirmAndDelete(item);
 
         menu.Items.Add(pinItem);
+        menu.Items.Add(editItem);
         menu.Items.Add(new Separator());
         menu.Items.Add(deleteItem);
         menu.IsOpen = true;

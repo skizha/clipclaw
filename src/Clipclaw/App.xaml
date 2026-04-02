@@ -25,7 +25,7 @@
             <SolidColorBrush x:Key="ClipSearchBackground"       Color="#EEEEF8" />
             <SolidColorBrush x:Key="ClipSearchBorderBrush"      Color="#B8B8D0" />
             <SolidColorBrush x:Key="ClipRowForeground"          Color="#1A1A2A" />
-            <SolidColorBrush x:Key="ClipRowSelectedBackground"  Color="#C0D4F4" />
+            <SolidColorBrush x:Key="ClipRowSelectedBackground"  Color="#A8C8F0" />
             <SolidColorBrush x:Key="ClipRowSelectedForeground"  Color="#0A0A1A" />
             <SolidColorBrush x:Key="ClipRowHoverBackground"     Color="#DAE8FA" />
             <SolidColorBrush x:Key="ClipRowAlternateBackground" Color="#F0F0F8" />
