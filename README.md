@@ -4,19 +4,20 @@ A keyboard-first Windows clipboard manager. Clipclaw sits in the system tray, si
 
 ## Features
 
-- **Instant recall** — open the clip panel from anywhere with `Ctrl+Shift+C`
-- **Paste by shortcut** — first five recent clips are bound to `Ctrl+Shift+1` through `Ctrl+Shift+5`
+- **Instant recall** — open the clip panel from anywhere with `Ctrl+Shift+C` (configurable)
+- **Paste by shortcut** — assign up to five clips to `Ctrl+Shift+1` … `Ctrl+Shift+5` per item in **Edit** (slots are not tied to list position)
 - **Full keyboard navigation** — arrow keys, Page Up/Down, Home/End, Enter to paste
-- **Pin items** — keep important clips at the top permanently (`Ctrl+P` or right-click → Pin)
-- **Edit clips** — rename with a short label and edit the text (`F2`)
+- **Pin items** — keep important clips at the top permanently (`Ctrl+P` or right-click → Pin / Unpin)
+- **Edit clips** — short label, full text, and optional shortcut slot (`F2`, double-click a row, or right-click → **Edit**)
+- **Add clip** — create a clip manually with the **+** button or `Ctrl+N` when the panel is open
 - **Delete clips** — remove any item with confirmation (`Delete`)
 - **Usage tracking** — USES column counts how many times each clip has been pasted
-- **Sections** — items organised into Pinned, Frequent, and Recent
+- **Sections** — Pinned, Frequent, and Recent, each with its own accent colour on the section header and on the selected row
 - **Search** — type instantly to filter; first Escape clears search, second closes panel
 - **Alternating rows** — subtle row shading for easy scanning
 - **Light and Dark themes** — switchable from Settings → General
 - **Persist history** — clipboard survives restarts (optional, SQLite-backed)
-- **Configurable shortcuts** — remap all hotkeys from Settings → Shortcuts
+- **Configurable shortcuts** — remap global hotkeys from Settings → Shortcuts
 - **Auto-start** — optionally launch with Windows
 
 ## Keyboard Reference
@@ -25,7 +26,7 @@ A keyboard-first Windows clipboard manager. Clipclaw sits in the system tray, si
 
 | Key | Action |
 |-----|--------|
-| `Ctrl+Shift+C` | Open / close clip panel |
+| `Ctrl+Shift+C` | Open / close clip panel (default; configurable) |
 | `↑` / `↓` | Move selection up / down |
 | `Page Up` / `Page Down` | Jump 5 rows |
 | `Home` / `End` | First / last item |
@@ -35,13 +36,15 @@ A keyboard-first Windows clipboard manager. Clipclaw sits in the system tray, si
 
 ### Item actions (panel open)
 
-| Key | Action |
-|-----|--------|
-| `Ctrl+Shift+1` – `5` | Paste recent item 1–5 directly (works globally) |
-| `F2` | Edit selected item (short name + text) |
+| Key / gesture | Action |
+|---------------|--------|
+| `Ctrl+Shift+1` – `5` | Paste the clip assigned to that slot in **Edit** (works globally when configured) |
+| `F2` | Edit selected item (short name, text, shortcut slot) |
+| Double-click row | Same as `F2` |
+| `Ctrl+N` | Add a new clip (same as the **+** button) |
 | `Delete` | Delete selected item (with confirmation) |
 | `Ctrl+P` | Pin / unpin selected item |
-| Right-click | Context menu: Pin / Unpin / Delete |
+| Right-click | Context menu: Pin / Unpin, **Edit**, Delete |
 | `Apps` or `Shift+F10` | Open context menu for selected item |
 
 ## Getting Started
@@ -79,7 +82,7 @@ dotnet test tests/Clipclaw.Tests/Clipclaw.Tests.csproj
 Access Settings by right-clicking the tray icon → **Settings**.
 
 | Setting | Default | Description |
-|---------|---------|-------------|
+|---------|---------|---------------|
 | Max history size | 50 | Maximum number of clips to keep |
 | Launch on startup | On | Start with Windows |
 | Keep history across restarts | On | Persist clips to SQLite on exit |
