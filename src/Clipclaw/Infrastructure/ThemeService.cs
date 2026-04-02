@@ -34,7 +34,7 @@ internal static class ThemeService
             r["ClipSearchBackground"]      = Brush(0x20, 0x20, 0x2E);
             r["ClipSearchBorderBrush"]     = Brush(0x30, 0x30, 0x48);
             r["ClipRowForeground"]         = Brush(0xE2, 0xE2, 0xEE);
-            r["ClipRowSelectedBackground"] = Brush(0x2E, 0x2E, 0x45);
+            r["ClipRowSelectedBackground"] = Brush(0x38, 0x38, 0x58);
             r["ClipRowSelectedForeground"] = Brush(0xF0, 0xF0, 0xFA);
             r["ClipRowHoverBackground"]    = Brush(0x24, 0x24, 0x36);
             r["ClipRowAlternateBackground"]= BrushA(0x12, 0xFF, 0xFF, 0xFF);
@@ -54,7 +54,7 @@ internal static class ThemeService
             r["ClipSearchBackground"]      = Brush(0xEE, 0xEE, 0xF8);
             r["ClipSearchBorderBrush"]     = Brush(0xB8, 0xB8, 0xD0);
             r["ClipRowForeground"]         = Brush(0x1A, 0x1A, 0x2A);
-            r["ClipRowSelectedBackground"] = Brush(0xC0, 0xD4, 0xF4);
+            r["ClipRowSelectedBackground"] = Brush(0xA8, 0xC8, 0xF0);
             r["ClipRowSelectedForeground"] = Brush(0x0A, 0x0A, 0x1A);
             r["ClipRowHoverBackground"]    = Brush(0xDA, 0xE8, 0xFA);
             r["ClipRowAlternateBackground"]= BrushA(0x0F, 0x00, 0x00, 0x00);
