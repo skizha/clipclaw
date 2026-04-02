@@ -43,14 +43,15 @@ internal sealed class SqlitePersistenceService : IPersistenceService
     {
         await ExecuteNonQueryAsync(conn, """
             CREATE TABLE IF NOT EXISTS ClipItems (
-                Id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                Text         TEXT    NOT NULL UNIQUE,
-                CopiedAt     TEXT    NOT NULL,
-                LastPastedAt TEXT,
-                PasteCount   INTEGER NOT NULL DEFAULT 0,
-                IsPinned     INTEGER NOT NULL DEFAULT 0,
-                DisplayOrder INTEGER NOT NULL DEFAULT 0,
-                ShortName    TEXT    NULL
+                Id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                Text          TEXT    NOT NULL UNIQUE,
+                CopiedAt      TEXT    NOT NULL,
+                LastPastedAt  TEXT,
+                PasteCount    INTEGER NOT NULL DEFAULT 0,
+                IsPinned      INTEGER NOT NULL DEFAULT 0,
+                DisplayOrder  INTEGER NOT NULL DEFAULT 0,
+                ShortName     TEXT    NULL,
+                ShortcutSlot  INTEGER NULL
             )
             """);
 
@@ -67,7 +68,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
                 LaunchOnStartup INTEGER NOT NULL DEFAULT 1,
                 PersistHistory  INTEGER NOT NULL DEFAULT 1,
                 PanelShortcut   TEXT    NOT NULL DEFAULT 'Ctrl+Shift+C',
-                Theme           TEXT    NOT NULL DEFAULT 'Dark'
+                Theme           TEXT    NOT NULL DEFAULT 'Light'
             )
             """);
 
@@ -91,6 +92,12 @@ internal sealed class SqlitePersistenceService : IPersistenceService
             "ALTER TABLE ClipItems ADD COLUMN ShortName TEXT NULL");
         await TryAlterAsync(conn,
             "ALTER TABLE AppSettings ADD COLUMN Theme TEXT NOT NULL DEFAULT 'Dark'");
+        await TryAlterAsync(conn,
+            "ALTER TABLE ClipItems ADD COLUMN ShortcutSlot INTEGER NULL");
+        // Migrate the old default 'Dark' → 'Light' now that Light is the new default.
+        // Users who explicitly chose Dark can re-select it in Settings.
+        await ExecuteNonQueryAsync(conn,
+            "UPDATE AppSettings SET Theme = 'Light' WHERE Id = 1 AND Theme = 'Dark';");
     }
 
     private static async Task TryAlterAsync(SqliteConnection conn, string alterSql)
@@ -147,7 +154,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
 
         await using var cmd = conn.CreateCommand();
         cmd.CommandText =
-            "SELECT Id, Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder, ShortName " +
+            "SELECT Id, Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder, ShortName, ShortcutSlot " +
             "FROM ClipItems ORDER BY IsPinned DESC, CopiedAt DESC;";
 
         var items = new List<ClipItem>();
@@ -165,18 +172,19 @@ internal sealed class SqlitePersistenceService : IPersistenceService
 
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO ClipItems (Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder, ShortName)
-            VALUES (@text, @copiedAt, @lastPastedAt, @pasteCount, @isPinned, @displayOrder, @shortName)
+            INSERT INTO ClipItems (Text, CopiedAt, LastPastedAt, PasteCount, IsPinned, DisplayOrder, ShortName, ShortcutSlot)
+            VALUES (@text, @copiedAt, @lastPastedAt, @pasteCount, @isPinned, @displayOrder, @shortName, @shortcutSlot)
             ON CONFLICT(Text) DO UPDATE SET
                 CopiedAt     = excluded.CopiedAt,
                 LastPastedAt = excluded.LastPastedAt,
                 PasteCount   = excluded.PasteCount,
                 IsPinned     = excluded.IsPinned,
                 DisplayOrder = excluded.DisplayOrder,
-                ShortName    = COALESCE(excluded.ShortName, ShortName);
+                ShortName    = COALESCE(excluded.ShortName, ShortName),
+                ShortcutSlot = COALESCE(excluded.ShortcutSlot, ShortcutSlot);
             """;
-        // COALESCE preserves an existing ShortName when a new capture has ShortName = null
-        // (e.g., ClipboardService re-capturing the same text externally).
+        // COALESCE preserves existing ShortName/ShortcutSlot when a new clipboard capture
+        // arrives for the same text without those fields set.
         AddClipItemParams(cmd, item);
         await cmd.ExecuteNonQueryAsync();
     }
@@ -188,6 +196,18 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = "DELETE FROM ClipItems WHERE Id = @id;";
         cmd.Parameters.AddWithValue("@id", id);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task ClearShortcutSlotAsync(int slot, int excludeId)
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText =
+            "UPDATE ClipItems SET ShortcutSlot = NULL WHERE ShortcutSlot = @slot AND Id != @excludeId;";
+        cmd.Parameters.AddWithValue("@slot",      slot);
+        cmd.Parameters.AddWithValue("@excludeId", excludeId);
         await cmd.ExecuteNonQueryAsync();
     }
 
@@ -325,6 +345,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         cmd.Parameters.AddWithValue("@isPinned",     item.IsPinned     ? 1 : 0);
         cmd.Parameters.AddWithValue("@displayOrder", item.DisplayOrder);
         cmd.Parameters.AddWithValue("@shortName",    (object?)item.ShortName ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shortcutSlot", (object?)item.ShortcutSlot ?? DBNull.Value);
     }
 
     private static ClipItem ReadClipItem(SqliteDataReader r) => new()
@@ -337,6 +358,7 @@ internal sealed class SqlitePersistenceService : IPersistenceService
         IsPinned     = r.GetInt32(5) == 1,
         DisplayOrder = r.GetInt32(6),
         ShortName    = r.IsDBNull(7) ? null : r.GetString(7),
+        ShortcutSlot = r.IsDBNull(8) ? null : r.GetInt32(8),
     };
 
     private static AppSettings ReadAppSettings(SqliteDataReader r) => new()

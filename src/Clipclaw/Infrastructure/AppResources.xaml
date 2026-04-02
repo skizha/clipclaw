@@ -3,11 +3,8 @@
                     xmlns:inf="clr-namespace:Clipclaw.Infrastructure">
 
     <inf:CountToVisibilityConverter  x:Key="CountToVisibilityConverter" />
-    <inf:IndexToBadgeConverter       x:Key="IndexToBadgeConverter" />
-    <inf:IndexToVisibilityConverter  x:Key="IndexToVisibilityConverter" />
-    <inf:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+    <inf:BoolToVisibilityConverter   x:Key="BoolToVisibilityConverter" />
     <inf:IndexToOddConverter         x:Key="IndexToOddConverter" />
     <inf:CopyCountDisplayConverter   x:Key="CopyCountDisplayConverter" />
-    <inf:IndexToShortcutConverter    x:Key="IndexToShortcutConverter" />
 
 </ResourceDictionary>

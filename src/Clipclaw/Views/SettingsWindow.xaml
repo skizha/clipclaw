@@ -210,7 +210,7 @@
     </Window.Resources>
 
     <Grid Margin="0">
-        <TabControl>
+        <TabControl x:Name="SettingsTabControl">
 
             <!-- ── General tab ── -->
             <TabItem Header="General">
@@ -288,6 +288,10 @@
                     <TextBlock Text="KEYBOARD SHORTCUTS" Style="{StaticResource SectionTitle}" />
                     <TextBlock Text="Click a field and press the new key combination."
                                Style="{StaticResource SettingsMuted}"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="Changing a shortcut here only updates which keys trigger that action. Clips keep the same slot numbers (1–5) you assigned in Edit; they are not cleared or reshuffled."
+                               Style="{StaticResource SettingsMuted}"
+                               TextWrapping="Wrap"
                                Margin="0,0,0,16" />
 
                     <ItemsControl ItemsSource="{Binding Bindings}">

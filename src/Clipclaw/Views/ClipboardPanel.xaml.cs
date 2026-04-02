@@ -12,6 +12,12 @@ public partial class ClipboardPanel : Window
     // Visible rows used for Page Up/Down jump size calculation
     private const int PageJumpSize = 5;
 
+    /// <summary>
+    /// When non-zero, the panel lost activation to a modal dialog or message box we opened;
+    /// do not treat that as "click outside" (which would hide the panel).
+    /// </summary>
+    private int _suppressDeactivateHideDepth;
+
     private readonly PanelViewModel _viewModel;
 
     public event EventHandler? PasteRequested;
@@ -69,6 +75,11 @@ public partial class ClipboardPanel : Window
             TogglePinSelected();
             return;
         }
+        if (e.Key == Key.N && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            HandleAdd();
+            return;
+        }
         if ((e.Key == Key.Apps) ||
             (e.Key == Key.F10 && Keyboard.Modifiers == ModifierKeys.Shift))
         {
@@ -114,11 +125,21 @@ public partial class ClipboardPanel : Window
 
     private void ConfirmAndDelete(ClipItem item)
     {
-        var result = MessageBox.Show(
-            "Delete this item?",
-            "Clipclaw",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+        _suppressDeactivateHideDepth++;
+        MessageBoxResult result;
+        try
+        {
+            result = MessageBox.Show(
+                this,
+                "Delete this item?",
+                "Clipclaw",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+        }
+        finally
+        {
+            _suppressDeactivateHideDepth--;
+        }
 
         if (result == MessageBoxResult.Yes)
             _viewModel.DeleteCommand.Execute(item);
@@ -128,13 +149,47 @@ public partial class ClipboardPanel : Window
     {
         if (_viewModel.SelectedItem is not { } item) return;
 
-        var dialog = new EditClipDialog(item, this);
-        // ShowDialog blocks until the user closes the dialog
-        dialog.ShowDialog();
+        // Build occupied-slot map excluding the item being edited so its own
+        // current slot doesn't appear as "taken by someone else".
+        var occupied = OccupiedSlots(excludeItem: item);
+        var dialog = new EditClipDialog(item, this, occupied);
+        _suppressDeactivateHideDepth++;
+        try
+        {
+            dialog.ShowDialog();
+        }
+        finally
+        {
+            _suppressDeactivateHideDepth--;
+        }
 
         if (dialog.Result is { } updated)
             _ = _viewModel.EditItemAsync(item, updated);
     }
+
+    private void HandleAdd()
+    {
+        var occupied = OccupiedSlots(excludeItem: null);
+        var blank    = new ClipItem { CopiedAt = DateTime.UtcNow };
+        var dialog   = new EditClipDialog(blank, this, occupied);
+        _suppressDeactivateHideDepth++;
+        try
+        {
+            dialog.ShowDialog();
+        }
+        finally
+        {
+            _suppressDeactivateHideDepth--;
+        }
+
+        if (dialog.Result is { } added)
+            _ = _viewModel.AddItemAsync(added);
+    }
+
+    private IReadOnlyDictionary<int, string> OccupiedSlots(ClipItem? excludeItem)
+        => _viewModel.GetFlatVisibleList()
+            .Where(i => i.ShortcutSlot.HasValue && !ReferenceEquals(i, excludeItem))
+            .ToDictionary(i => i.ShortcutSlot!.Value, i => i.DisplayLabel);
 
     private void HandleTypableKey(KeyEventArgs e)
     {
@@ -152,6 +207,8 @@ public partial class ClipboardPanel : Window
         }
     }
 
+    private void AddButton_Click(object sender, RoutedEventArgs e) => HandleAdd();
+
     private void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         // Down arrow in search box → move to list
@@ -167,16 +224,12 @@ public partial class ClipboardPanel : Window
 
     private void AnyList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        // When a list row is clicked, ensure the ViewModel SelectedItem is updated
-        // and the other two lists are cleared so only one item is highlighted.
+        // When a list row is clicked, sync to the ViewModel. The OneWay bindings on
+        // the other two ListBoxes handle deselection automatically: when SelectedItem
+        // is not in a list's ItemsSource, WPF shows no selection there. Never assign
+        // null directly to SelectedItem — that would break the binding on that list.
         if (e.AddedItems.Count > 0 && e.AddedItems[0] is ClipItem clicked)
-        {
             _viewModel.SelectedItem = clicked;
-
-            if (sender != PinnedList)   PinnedList.SelectedItem   = null;
-            if (sender != FrequentList) FrequentList.SelectedItem = null;
-            if (sender != RecentList)   RecentList.SelectedItem   = null;
-        }
     }
 
     // ── Context menu ──────────────────────────────────────────────────────────
@@ -190,12 +243,7 @@ public partial class ClipboardPanel : Window
             hit = VisualTreeHelper.GetParent(hit);
 
         if (hit is ListBoxItem { DataContext: ClipItem clicked })
-        {
             _viewModel.SelectedItem = clicked;
-            if (listBox != PinnedList)   PinnedList.SelectedItem   = null;
-            if (listBox != FrequentList) FrequentList.SelectedItem = null;
-            if (listBox != RecentList)   RecentList.SelectedItem   = null;
-        }
 
         ShowContextMenuForSelected();
         e.Handled = true;
@@ -256,6 +304,13 @@ public partial class ClipboardPanel : Window
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
+        // Opening a modal Edit/MessageBox moves activation away; don't treat that as leaving the panel.
+        if (_suppressDeactivateHideDepth > 0)
+            return;
+        // Owned modal children (e.g. EditClipDialog) — extra guard while the dialog is visible.
+        if (OwnedWindows.Count > 0)
+            return;
+
         // Auto-close when the user clicks outside the panel
         Hide();
     }

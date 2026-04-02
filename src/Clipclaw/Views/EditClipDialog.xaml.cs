@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Clipclaw.Models;
 
@@ -14,27 +15,38 @@ public partial class EditClipDialog : Window
     /// </summary>
     public ClipItem? Result { get; private set; }
 
-    public EditClipDialog(ClipItem item, Window owner)
+    /// <param name="item">Item to edit (Id == 0 for new items).</param>
+    /// <param name="owner">Parent window for centering.</param>
+    /// <param name="occupiedSlots">
+    /// Maps slot number (1–5) → the label of the item that currently holds it,
+    /// excluding <paramref name="item"/> itself. Used to warn the user when they
+    /// pick a slot that is already in use by another item.
+    /// </param>
+    public EditClipDialog(ClipItem item, Window owner,
+        IReadOnlyDictionary<int, string> occupiedSlots)
     {
         InitializeComponent();
-        Owner    = owner;
+        Owner     = owner;
         _original = item;
 
-        // Pre-fill fields with existing values
+        Title = item.Id == 0 ? "Add Clip" : "Edit Clip";
+
         ShortNameBox.Text = item.ShortName ?? string.Empty;
         TextBox.Text      = item.Text;
 
-        // Start focus in the short name field for quick labelling
+        BuildSlotItems(occupiedSlots);
+        SelectSlot(item.ShortcutSlot);
+
         Loaded += (_, _) =>
         {
-            ShortNameBox.Focus();
-            ShortNameBox.SelectAll();
+            if (item.Id == 0) TextBox.Focus();
+            else { ShortNameBox.Focus(); ShortNameBox.SelectAll(); }
         };
 
         PreviewKeyDown += OnDialogPreviewKeyDown;
     }
 
-    // ── Keyboard handlers ─────────────────────────────────────────────────────
+    // ── Keyboard handlers ──────────────────────────────────────────────────────
 
     private void OnDialogPreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -57,8 +69,7 @@ public partial class EditClipDialog : Window
 
     private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // Enter alone adds a newline in the text field (multiline).
-        // Ctrl+Enter saves from the text field.
+        // Enter alone adds a newline; Ctrl+Enter saves.
         if (e.Key == Key.Return && Keyboard.Modifiers == ModifierKeys.Control)
         {
             Save();
@@ -84,18 +95,20 @@ public partial class EditClipDialog : Window
         }
 
         var newShortName = ShortNameBox.Text.Trim();
+        var slot         = SelectedSlot();
 
         // Build the updated item, preserving Id and metadata from the original
         Result = new ClipItem
         {
             Id           = _original.Id,
             Text         = newText,
-            CopiedAt     = _original.CopiedAt,
+            CopiedAt     = _original.CopiedAt == default ? DateTime.UtcNow : _original.CopiedAt,
             LastPastedAt = _original.LastPastedAt,
             PasteCount   = _original.PasteCount,
             IsPinned     = _original.IsPinned,
             DisplayOrder = _original.DisplayOrder,
             ShortName    = string.IsNullOrWhiteSpace(newShortName) ? null : newShortName,
+            ShortcutSlot = slot,
         };
 
         DialogResult = true;
@@ -108,4 +121,38 @@ public partial class EditClipDialog : Window
         DialogResult = false;
         Close();
     }
+
+    // ── Slot helpers ──────────────────────────────────────────────────────────
+
+    private void BuildSlotItems(IReadOnlyDictionary<int, string> occupiedSlots)
+    {
+        // Rebuild combo items so occupied slots show who holds them.
+        // Tag stays null for None and an int for slots 1–5.
+        SlotComboBox.Items.Clear();
+        SlotComboBox.Items.Add(new ComboBoxItem { Content = "None", Tag = null });
+
+        for (var n = 1; n <= 5; n++)
+        {
+            string label = occupiedSlots.TryGetValue(n, out var holder)
+                ? $"Ctrl+Shift+{n}  —  taken by \"{TruncateLabel(holder)}\""
+                : $"Ctrl+Shift+{n}";
+
+            SlotComboBox.Items.Add(new ComboBoxItem { Content = label, Tag = n });
+        }
+    }
+
+    private void SelectSlot(int? slot)
+    {
+        // Index 0 = None, index N = slot N
+        SlotComboBox.SelectedIndex = slot ?? 0;
+    }
+
+    private int? SelectedSlot()
+    {
+        if (SlotComboBox.SelectedItem is ComboBoxItem { Tag: int slot }) return slot;
+        return null;
+    }
+
+    private static string TruncateLabel(string label)
+        => label.Length <= 20 ? label : string.Concat(label.AsSpan(0, 20), "…");
 }

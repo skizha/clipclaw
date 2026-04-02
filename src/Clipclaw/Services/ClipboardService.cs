@@ -41,9 +41,19 @@ internal sealed class ClipboardService : IClipboardService
     public void SetActiveClipboard(int index)
     {
         if (index < 0 || index >= _history.Count) return;
+        WriteToClipboard(_history[index]);
+    }
 
-        var item = _history[index];
+    public void SetActiveClipboardBySlot(int slot)
+    {
+        // Shortcuts are manual only (assigned per item in Edit); no position-based fallback.
+        var item = _history.FirstOrDefault(i => i.ShortcutSlot == slot);
+        if (item is null) return;
+        WriteToClipboard(item);
+    }
 
+    private void WriteToClipboard(ClipItem item)
+    {
         _isWritingToClipboard = true;
         try
         {
@@ -56,6 +66,8 @@ internal sealed class ClipboardService : IClipboardService
 
         _ = _usageTracking.RecordPasteAsync(item);
     }
+
+    public Task RefreshHistoryAsync() => LoadHistoryAsync();
 
     // ── Private helpers ───────────────────────────────────────────────────────
 

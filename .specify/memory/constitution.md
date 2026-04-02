@@ -1,24 +1,23 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 1.0.0 → 1.1.0
+  Version change: 1.1.0 → 1.2.0
   Modified principles:
-    - I.  Spec-First Development       — unchanged
-    - II. User-Story Orientation       — unchanged
-    - III. Test-Driven Development     — unchanged
-    - IV. Simplicity & YAGNI           — unchanged
-    - V.  Observability-Ready          — replaced with "Readable Code" (project-specific)
+    - I.   Spec-First Development          — unchanged
+    - II.  User-Story Orientation          — unchanged
+    - III. Keyboard-First Interaction      — unchanged (NON-NEGOTIABLE)
+    - IV.  Readable Code                   — unchanged (NON-NEGOTIABLE)
+    - V.   Simplicity & YAGNI              — unchanged
+    - VI.  Windows-Native Reliability      — unchanged
+    - VII. Non-Regression Guarantee        — NEW (added 2026-03-30)
   Added sections:
-    - Product Identity (new — Windows clipboard manager context)
-    - Keyboard-First Interaction (new principle VI)
+    - Principle VII: Non-Regression Guarantee
+    - Quality Gate 7: Non-regression gate (manual smoke or automated test pass)
   Removed sections: none
   Templates reviewed:
     - .specify/templates/plan-template.md   ✅ aligned (Constitution Check section present)
     - .specify/templates/spec-template.md   ✅ aligned
-    - .specify/templates/tasks-template.md  ✅ aligned
-    - .claude/commands/speckit.plan.md      ✅ aligned
-    - .claude/commands/speckit.specify.md   ✅ aligned
-    - .claude/commands/speckit.constitution.md ✅ aligned
+    - .specify/templates/tasks-template.md  ✅ aligned (Polish phase covers regression validation)
   Deferred TODOs: none
 -->
 
@@ -129,6 +128,28 @@ well-mannered Windows citizen.
 **Rationale**: A clipboard manager that interferes with normal copy/paste or
 drains battery will be uninstalled immediately regardless of its feature set.
 
+### VII. Non-Regression Guarantee
+
+New features MUST NOT break or degrade any previously shipped functionality.
+
+- Every feature spec MUST include an explicit "Existing Behaviour Unaffected"
+  section that lists clipboard capture, paste, shortcut retrieval, tray icon, and
+  any other existing user-facing behaviours that the change touches — with a
+  statement confirming each is unaffected or explicitly updated.
+- Before merging a feature branch, a smoke pass over ALL prior acceptance
+  scenarios (from their respective `spec.md` files) MUST be completed. Failures
+  block the merge.
+- Refactors that touch shared infrastructure (hotkey registration, SQLite schema,
+  clipboard listener, tray icon) MUST be accompanied by at minimum a manual
+  regression checklist entry in the PR description.
+- SQLite schema changes MUST be additive (new columns/tables with defaults) or
+  accompanied by a migration; destructive schema changes that break existing data
+  are PROHIBITED without an explicit migration plan.
+
+**Rationale**: Clipclaw is installed as a persistent background tool. A regression
+in core copy/paste behaviour, even from an unrelated new feature, erodes user
+trust instantly and permanently.
+
 ## Development Workflow
 
 - **Branch naming**: `{number}-{short-name}` (sequential), auto-assigned by
@@ -158,6 +179,8 @@ The following gates MUST pass before a feature branch is merged:
    without documented reason.
 6. **Review gate**: At least one peer review (or self-review with checklist) is
    completed.
+7. **Non-regression gate**: Smoke pass over all prior acceptance scenarios passes;
+   the spec's "Existing Behaviour Unaffected" section is present and complete.
 
 Complexity exceptions MUST be recorded in the plan's Complexity Tracking table
 and referenced in the PR description.
@@ -180,4 +203,4 @@ and referenced in the PR description.
 - **Runtime guidance**: Consult `.specify/memory/` for up-to-date agent context
   and active feature plans.
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-29
+**Version**: 1.2.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-30

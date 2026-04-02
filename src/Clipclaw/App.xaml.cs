@@ -34,8 +34,9 @@ public partial class App : Application
 
         var settings = await persistence.GetSettingsAsync();
 
-        // Restore the persisted theme before any window is shown
-        if (settings.Theme != ClipTheme.Dark)
+        // Restore the persisted theme before any window is shown.
+        // Light is the default; only call Apply when the stored theme differs.
+        if (settings.Theme != ClipTheme.Light)
             ThemeService.Apply(settings.Theme);
 
         StartupService.Apply(settings.LaunchOnStartup);
@@ -137,7 +138,7 @@ public partial class App : Application
         if (index >= 0)
         {
             var clipboard = Services.GetRequiredService<IClipboardService>();
-            clipboard.SetActiveClipboard(index);
+            clipboard.SetActiveClipboardBySlot(index + 1); // slot is 1-based
 
             // The hotkey modifier keys (Ctrl+Shift) are still physically held at this
             // point. Wait 150 ms for them to be released, then inject Ctrl+V into
